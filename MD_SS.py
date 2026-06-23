@@ -210,7 +210,31 @@ target_products={
     "[온유 팝업_TOUGH LOVE] 페이퍼 인센스" : 180,
     "[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포토카드" : 50,
     "[온유 팝업_TOUGH LOVE] 프레임 홀더 세트" : 190,
-    "[정세운 2026 시즌그리팅] 시즌그리팅" : 1363.6
+    "[정세운 2026 시즌그리팅] 시즌그리팅" : 1363.6,
+    "[CAM 10CM_Chapter 1] 날진 물통" : 5000,
+    "[CAM 10CM_Chapter 1] 반팔 티셔츠" : 750,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (도쿄)_대행" : 300,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (방콕)_대행" : 300,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (부산)" : 300,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (싱가포르)_대행" : 300,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (타이베이)_대행" : 300,
+    "[CAM 10CM_Chapter 1] 아크릴 마그넷 (홍콩)_대행" : 300,
+    "[CAM 10CM_Chapter 1] 파우치 대행" : 500,
+    "[CAM 10CM_Chapter 1] 후드티셔츠 레드" : 1875,
+    "[CAM 10CM_Chapter 1] 후드티셔츠 블랙" : 1875,
+    "[CAM 머드 더 스튜던트 LAGEON] 볼캡" : 1000,
+    "[CAM 머드 더 스튜던트 LAGEON] 티셔츠 L" : 750,
+    "[CAM 머드 더 스튜던트 LAGEON] 티셔츠 M" : 750,
+    "[CAM 머드 더 스튜던트 LAGEON] 포토진" : 1500,
+    "[CAM 머드 더 스튜던트 LAGEON] 후드집업 L" : 1875,
+    "[CAM 정세운 콘서트MD_Margins] 기타 피크 & 핀 배지 세트" : 300,
+    "[CAM 정세운 콘서트MD_Margins] 슬리퍼" : 1000,
+    "[CAM 정세운 콘서트MD_Margins] 엽서" : 100,
+    "[CAM 정세운 콘서트MD_Margins] 타포린백" : 1500,
+    "[CAM 정세운 콘서트MD_Margins] 티셔츠" : 750,
+    "[CAM 정세운] Keyring (Love in the Margins Edition)" : 300,
+    "[CAM 카더가든 콘서트 MD_BLUE HEART] 후드티_M" : 1875,
+    "[쇼미더머니_2025 콘서트] 리무버블 스티커" : 150
 }
 
 box_limit = 15000  # 기본 박스 최대 용량
