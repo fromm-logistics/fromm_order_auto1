@@ -1,6 +1,6 @@
 # md_main.py
 import streamlit as st
-from MD_FS1 import run_md_fs
+from MD_FS import run_md_fs
 from MD_SS import run_md_ss
 from MD_general import run_md_general
 
