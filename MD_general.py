@@ -9,6 +9,9 @@ from openpyxl.styles import PatternFill
 
 # 가격 예측 및 카테고리 설정   
 def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
+    df = df.copy()
+    df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)  # ← 추가
+
     def assign_boxes(group):
         total_weight = 0
         order_suffix = 1
