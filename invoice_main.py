@@ -312,9 +312,9 @@ def run_invoice_main():
                                 st.write(list(df.columns))
                                 st.dataframe(df.head(5))
                             else:
-                                # 1. '판매처'에서 "Wonderwall(해외)" 행 삭제
+                                # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "Wonderwall(해외)"]
+                                    df = df[df['판매처'] != "wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -357,6 +357,114 @@ def run_invoice_main():
 
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_패스트박스_국내.csv"
+
+                    df_export = st.session_state.df_result.copy()
+                    for col in df_export.columns:
+                        if pd.api.types.is_numeric_dtype(df_export[col]):
+                            df_export[col] = df_export[col].astype('int64').astype(str)
+                        else:
+                            df_export[col] = (
+                                df_export[col].astype(str)
+                                .str.replace(r'\.0$', '', regex=True)
+                            )
+
+                    header_line = ','.join(df_export.columns.tolist())
+                    data_lines = [
+                        ','.join(str(v) for v in row)
+                        for row in df_export.itertuples(index=False, name=None)
+                    ]
+                    csv_str = header_line + '\n' + '\n'.join(data_lines) + '\n'
+                    csv_bytes = csv_str.encode('utf-8-sig')
+
+                    st.download_button(
+                        label="💾 변환된 파일 저장 (다운로드)",
+                        data=csv_bytes,
+                        file_name=file_name,
+                        mime="text/csv",
+                        use_container_width=True
+                    )
+        elif st.session_state.invoice_courier == "다보내" and st.session_state.invoice_region == "해외":
+            st.markdown("### 3단계: 파일 업로드 및 변환")
+
+            uploaded_file = st.file_uploader(
+                "[다보내 - 해외] CSV 파일을 업로드하세요.",
+                type=["csv"]
+            )
+
+            if uploaded_file is not None:
+                st.success(f"📂 {uploaded_file.name} 파일이 가져오기 완료되었습니다.")
+
+                if st.button("송장업로드 파일 변환 실행", use_container_width=True, key="dabonae_overseas_convert_btn"):
+                    try:
+                        # CSV 읽기 (인코딩 자동 감지)
+                        uploaded_file.seek(0)
+                        try:
+                            df = pd.read_csv(uploaded_file, encoding='utf-8-sig', dtype=str)
+                        except Exception:
+                            uploaded_file.seek(0)
+                            df = pd.read_csv(uploaded_file, encoding='cp949', dtype=str)
+
+                        df.columns = df.columns.astype(str).str.strip()
+
+                        # ="값" 형식으로 저장된 셀을 순수 값으로 변환 (예: ="NONE" → NONE)
+                        df = df.apply(lambda col: col.str.replace(r'^="(.*)"$', r'\1', regex=True))
+
+                        # 열 존재 확인
+                        required_cols = ['현지 배송사', '배송 No1', '관리번호', '상품수량']
+                        missing_cols = [c for c in required_cols if c not in df.columns]
+
+                        if missing_cols:
+                            st.error(f"❌ CSV 파일에 필요한 열이 없습니다: {missing_cols}")
+                            st.warning("💡 파일에서 감지된 열 목록:")
+                            st.write(list(df.columns))
+                            st.dataframe(df.head(5))
+                        else:
+                            # 1. 필요한 열만 남기기
+                            df = df[required_cols]
+
+                            # 2. '관리번호' 빈값 또는 "NONE" 행 삭제
+                            df = df[df['관리번호'].notna()]
+                            df = df[df['관리번호'].astype(str).str.strip() != ""]
+                            df = df[df['관리번호'].astype(str).str.strip().str.upper() != "NONE"]
+                            df = df[df['관리번호'].astype(str).str.lower() != "nan"]
+
+                            # 3. '현지 배송사' 또는 '배송 No1' 빈값 행 삭제
+                            df = df[df['현지 배송사'].notna()]
+                            df = df[df['현지 배송사'].astype(str).str.strip() != ""]
+                            df = df[df['현지 배송사'].astype(str).str.lower() != "nan"]
+                            df = df[df['배송 No1'].notna()]
+                            df = df[df['배송 No1'].astype(str).str.strip() != ""]
+                            df = df[df['배송 No1'].astype(str).str.lower() != "nan"]
+
+                            # 4. '현지 배송사' 소문자 변환
+                            df['현지 배송사'] = df['현지 배송사'].astype(str).str.lower().str.strip()
+
+                            # 5. 열 순서 재정렬
+                            df = df[['관리번호', '현지 배송사', '배송 No1', '상품수량']]
+
+                            # 6. 열 헤드 이름 수정
+                            df.columns = ['id', 'courier', 'waybill', 'amount']
+
+                            # 7. 'id'와 'courier' 중복값 제거 후 'amount' 합치기
+                            df['amount'] = pd.to_numeric(df['amount'], errors='coerce').fillna(0).astype(int)
+                            df = df.groupby(['id', 'courier'], as_index=False).agg({'waybill': 'first', 'amount': 'sum'})
+                            df = df[['id', 'courier', 'waybill', 'amount']]
+
+                            st.session_state.df_result = df
+                            st.success("🎉 파일 변환이 성공적으로 완료되었습니다!")
+                            st.rerun()
+
+                    except Exception as e:
+                        st.error(f"❌ 파일 처리 중 에러가 발생했습니다: {e}")
+
+                # 변환 완료 후 저장 단계
+                if st.session_state.df_result is not None:
+                    st.write("---")
+                    st.markdown("### 4단계: 변환된 파일 저장")
+                    st.dataframe(st.session_state.df_result, use_container_width=True)
+
+                    today_str = datetime.today().strftime('%Y%m%d')
+                    file_name = f"{today_str}_다보내_해외.csv"
 
                     df_export = st.session_state.df_result.copy()
                     for col in df_export.columns:
