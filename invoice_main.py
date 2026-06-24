@@ -246,6 +246,143 @@ def run_invoice_main():
                         mime="text/csv",
                         use_container_width=True
                     )
+        elif st.session_state.invoice_courier == "패스트박스" and st.session_state.invoice_region == "국내":
+            st.markdown("### 3단계: 파일 업로드 및 변환")
+
+            uploaded_file = st.file_uploader(
+                "[패스트박스 - 국내] 'Microsoft Excel 97-2003 워크시트(.xls)' 파일을 업로드하세요.",
+                type=["xls"]
+            )
+
+            if uploaded_file is not None:
+                st.success(f"📂 {uploaded_file.name} 파일이 가져오기 완료되었습니다.")
+
+                courier_input = st.selectbox(
+                    "배송사를 선택하세요",
+                    options=["", "cjlogistics", "epost", "hanjin", "logen", "lotte"],
+                    index=0,
+                    format_func=lambda x: "-- 선택하세요 --" if x == "" else x,
+                    key="fastbox_courier_select"
+                )
+
+                if st.button("송장업로드 파일 변환 실행", use_container_width=True, key="fastbox_convert_btn"):
+                    if not courier_input.strip():
+                        st.error("⚠️ 배송사 이름을 먼저 선택한 후 변환을 실행해 주세요!")
+                    else:
+                        try:
+                            uploaded_file.seek(0)
+                            html_text = uploaded_file.read().decode('utf-8', errors='ignore')
+                            df = None
+
+                            df = _parse_html_table(html_text)
+
+                            if df is None or not any(col in df.columns for col in ['송장번호', '코드1', '주문수량']):
+                                try:
+                                    df_list = pd.read_html(io.StringIO(html_text), header=0)
+                                    if df_list:
+                                        df = df_list[0]
+                                        df.columns = df.columns.astype(str).str.strip()
+                                except Exception:
+                                    pass
+
+                            if df is None or not any(col in df.columns for col in ['송장번호', '코드1', '주문수량']):
+                                try:
+                                    uploaded_file.seek(0)
+                                    df_xls = pd.read_excel(uploaded_file, engine='xlrd', header=None)
+                                    for i in range(min(10, len(df_xls))):
+                                        row_vals = df_xls.iloc[i].astype(str).str.strip().tolist()
+                                        if '코드1' in row_vals or '송장번호' in row_vals:
+                                            df_xls.columns = df_xls.iloc[i].astype(str).str.strip()
+                                            df = df_xls[i+1:].reset_index(drop=True)
+                                            break
+                                except Exception:
+                                    pass
+
+                            if df is None or len(df) == 0:
+                                raise ValueError("파일 구조를 해석할 수 없습니다. 파일이 손상됐거나 형식이 다릅니다.")
+
+                            df.columns = df.columns.astype(str).str.strip()
+
+                            required_cols = ['주문수량', '송장번호', '코드1', '복사_관리번호']
+                            missing_cols = [c for c in required_cols if c not in df.columns]
+
+                            if missing_cols:
+                                st.error(f"❌ 엑셀 파일에 필요한 열이 없습니다: {missing_cols}")
+                                st.warning("💡 파일에서 감지된 열 목록:")
+                                st.write(list(df.columns))
+                                st.dataframe(df.head(5))
+                            else:
+                                # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
+                                if '판매처' in df.columns:
+                                    df = df[df['판매처'] != "wonderwall(해외)"]
+
+                                # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
+                                if '수령자주소' in df.columns:
+                                    df = df[~df['수령자주소'].astype(str).str.contains(r"YTO\(노머스 대련CC\)", na=False)]
+
+                                # 3. 지정된 열만 남기기
+                                df = df[required_cols]
+
+                                # 4. '코드1'에서 빈값(NaN) 행 삭제
+                                df = df.dropna(subset=['코드1'])
+                                df = df[df['코드1'].astype(str).str.strip() != ""]
+                                df = df[df['코드1'].astype(str).str.lower() != "nan"]
+
+                                # 5. '복사_관리번호'에서 0이 아닌 값들은 행 삭제
+                                df = df[df['복사_관리번호'].astype(str).str.strip() == "0"]
+
+                                # 6. '코드1'과 '송장번호' 중복값 제거 후 '주문수량' 합치기
+                                df['주문수량'] = pd.to_numeric(df['주문수량'], errors='coerce').fillna(0).astype(int)
+                                df = df.groupby(['코드1', '송장번호'], as_index=False)['주문수량'].sum()
+
+                                # 7~9. 열 순서 정렬 및 '배송사' 열 추가
+                                df['배송사'] = courier_input.strip()
+                                df = df[['코드1', '배송사', '송장번호', '주문수량']]
+
+                                # 10. 열 헤드 이름 수정
+                                df.columns = ['id', 'courier', 'waybill', 'amount']
+
+                                st.session_state.df_result = df
+                                st.success("🎉 파일 변환이 성공적으로 완료되었습니다!")
+                                st.rerun()
+
+                        except Exception as e:
+                            st.error(f"❌ 파일 처리 중 에러가 발생했습니다: {e}")
+
+                # 변환 완료 후 저장 단계
+                if st.session_state.df_result is not None:
+                    st.write("---")
+                    st.markdown("### 4단계: 변환된 파일 저장")
+                    st.dataframe(st.session_state.df_result, use_container_width=True)
+
+                    today_str = datetime.today().strftime('%Y%m%d')
+                    file_name = f"{today_str}_패스트박스_국내.csv"
+
+                    df_export = st.session_state.df_result.copy()
+                    for col in df_export.columns:
+                        if pd.api.types.is_numeric_dtype(df_export[col]):
+                            df_export[col] = df_export[col].astype('int64').astype(str)
+                        else:
+                            df_export[col] = (
+                                df_export[col].astype(str)
+                                .str.replace(r'\.0$', '', regex=True)
+                            )
+
+                    header_line = ','.join(df_export.columns.tolist())
+                    data_lines = [
+                        ','.join(str(v) for v in row)
+                        for row in df_export.itertuples(index=False, name=None)
+                    ]
+                    csv_str = header_line + '\n' + '\n'.join(data_lines) + '\n'
+                    csv_bytes = csv_str.encode('utf-8-sig')
+
+                    st.download_button(
+                        label="💾 변환된 파일 저장 (다운로드)",
+                        data=csv_bytes,
+                        file_name=file_name,
+                        mime="text/csv",
+                        use_container_width=True
+                    )
         else:
             st.markdown("### 3단계: 파일을 업로드하세요")
             st.info(f"현재 [{st.session_state.invoice_courier} - {st.session_state.invoice_region}] 기능은 준비 중입니다.")
