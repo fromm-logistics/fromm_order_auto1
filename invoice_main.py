@@ -49,6 +49,14 @@ def _parse_html_table(html_text: str) -> pd.DataFrame | None:
 def run_invoice_main():
     st.title("📦 송장")
 
+    # session_state 초기화 (클라우드 환경 대응)
+    if 'invoice_courier' not in st.session_state:
+        st.session_state.invoice_courier = None
+    if 'invoice_region' not in st.session_state:
+        st.session_state.invoice_region = None
+    if 'df_result' not in st.session_state:
+        st.session_state.df_result = None
+
     # 메인 메뉴로 돌아가기 버튼
     if st.button("⬅️ 메인 메뉴로 돌아가기"):
         st.session_state.page = 'main'
