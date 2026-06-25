@@ -129,11 +129,9 @@ def run_photocard_main():
             for item, data in results.items():
                 st.markdown(f"#### 📦 {item}")
                 st.dataframe(data['pivot'], use_container_width=True)
-                st.markdown(
-                f"**세트: {data['total_set']:,}EA &nbsp;/&nbsp; "
-                f"낱장: {data['total_loose']:,}EA &nbsp;/&nbsp; "
-                f"총: {data['total_qty']:,}EA**",
-                unsafe_allow_html=True
+                st.code(
+                    f"세트: {data['total_set']:,}EA  /  낱장: {data['total_loose']:,}EA  /  총: {data['total_qty']:,}EA",
+                    language=None
                 )
 
             # 5. 엑셀 다운로드 (재고명별 시트)
