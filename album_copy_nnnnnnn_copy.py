@@ -1,6 +1,5 @@
 # streamlit_main.py
 import streamlit as st
-from album_copy_nnnnnnn_copy import run_album
 from md_main import run_md_main, run_md_fs_page, run_md_ss_page, run_md_general_page
 from invoice_main import run_invoice_main
 from photocard_main import run_photocard_main
