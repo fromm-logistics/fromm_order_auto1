@@ -400,7 +400,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     # 6) 국제 컬럼 보정
     # ⭐ [조건 반영] 주석 해제 후 국가코드별 배송사 자동 매핑 규칙 적용
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'DE', 'SE', 'NL', 'NO', 'DK'] else 'ems')
+        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'DE', 'RO'] else 'ems')
     )
 
     intl['주'] = intl.apply(
