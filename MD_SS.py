@@ -236,14 +236,13 @@ target_products = {
     "[CAM 정세운] Keyring (Love in the Margins Edition)": 300,
     "[CAM 카더가든 콘서트 MD_BLUE HEART] 후드티_M": 1875,
     "[쇼미더머니_2025 콘서트] 리무버블 스티커": 150,
+    "[이민혁 팬미팅MD_HUTAZONE] 슬로건": 750
 }
 
 box_limit = 15000  # 기본 박스 최대 용량
 
 # ── 상품명 기준 제외 목록 (여기에 추가/삭제) ──────────────
-exclude_products = [
-    # 'PAPER INCENSE',
-    # 'METAL KEYRING',
+exclude_products = ['[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포토카드'
 ]
 
 
