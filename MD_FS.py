@@ -5,9 +5,8 @@ import io, re, random
 import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
-
 # ───────────────────────────────────────────────────
-# 1) 유저가 수정·확장 가능한 영역: 
+# 1) 유저가 수정·확장 가능한 영역:
 #    – 기본 target_products(재고명→무게 매핑)
 #    – box_limit(박스 최대 용량)
 # ───────────────────────────────────────────────────
@@ -248,10 +247,10 @@ target_products={
     "[에이티즈 콘서트 MD_IN YOUR FANTASY] 풀패키지 포토카드 (8종 세트)" : 1,
     "[BTOB 캐릭터 팝업] Card Sticker Set_햇냥이 (S)" : 100,
     "[BTOB 캐릭터 팝업] Griptok_아토" : 200,
-    "[이성열 팬미팅MD_YEOL’S DAY] 생일 스티커팩" : 100,
-    "[이성열 팬미팅MD_YEOL’S DAY] 아크릴 키링" : 300,
-    "[이성열 팬미팅MD_YEOL’S DAY] 티셔츠" : 750,
-    "[이성열 팬미팅MD_YEOL’S DAY] 틴케이스 포토카드 세트" : 300,
+    "[이성열 팬미팅MD_YEOL'S DAY] 생일 스티커팩" : 100,
+    "[이성열 팬미팅MD_YEOL'S DAY] 아크릴 키링" : 300,
+    "[이성열 팬미팅MD_YEOL'S DAY] 티셔츠" : 750,
+    "[이성열 팬미팅MD_YEOL'S DAY] 틴케이스 포토카드 세트" : 300,
     "[프로미스나인 콘서트MD_NOW] 트레이딩 포토카드" : 300,
     "[프로미스나인 콘서트MD_NOW] 티셔츠 - WHITE" : 750,
     "[프로미스나인] OFFICIAL LIGHT STICK Ver.2" : 1500,
@@ -331,25 +330,37 @@ target_products={
     "[이태빈 팬미팅 예약판매 MD] 패브릭 포스터" : 750,
     "[이태빈 팬미팅 예약판매 MD] 포토북" : 750
 }
-
-
-
 box_limit = 15000  # 기본 박스 최대 용량
+
+# ───────────────────────────────────────────────────
+# 제외할 재고명 목록 (처리에서 제외할 상품명을 아래에 추가)
+# 예시: exclude_products = ['상품A', '상품B']
+# ───────────────────────────────────────────────────
+exclude_products = [
+    # '상품명 예시',
+]
 
 def run_md_fs():
     st.button("◀ MD 창으로 돌아가기",
               on_click=lambda: st.session_state.update(page="md_main"),
               key="back_to_md_main_from_fs")
     st.title("📋 FS 나누기")
-
     uploaded = st.file_uploader("▶ FS 전용 CSV 업로드", type="csv", key="fs_csv")
     if uploaded:
         df = pd.read_csv(uploaded, dtype={'우편번호': str, '전화번호': str})
+
+        # 제외 상품 필터링
+        if exclude_products:
+            before = len(df)
+            df = df[~df['재고명'].astype(str).isin(exclude_products)]
+            removed = before - len(df)
+            if removed > 0:
+                st.info(f"🗑️ 제외 상품 {removed}행 삭제됨: {exclude_products}")
+
         st.session_state['fs_df'] = df
         st.success(f"CSV 업로드 완료: {df.shape[0]}행")
     else:
         df = st.session_state.get('fs_df')
-
     missing = []
     if df is not None:
         missing = sorted(set(df['재고명'].dropna()) - set(target_products))
@@ -362,7 +373,6 @@ def run_md_fs():
         else:
             st.success("모든 재고명이 target_products에 포함됩니다.")
             st.session_state['fs_verified'] = True
-
     if st.session_state.get('fs_verified') and missing:
         st.markdown("### 누락된 재고명의 무게를 입력해주세요")
         custom = st.session_state.get('fs_custom_weights', {})
@@ -371,7 +381,6 @@ def run_md_fs():
             if w:
                 custom[prod] = w
         st.session_state['fs_custom_weights'] = custom
-
     if st.session_state.get('fs_verified') and df is not None and st.button("✅ 실행"):
         merged_tp = {**target_products, **st.session_state.get('fs_custom_weights', {})}
         buf_all, buf_dom, buf_int = _process_fs(df, merged_tp, box_limit)
@@ -379,7 +388,6 @@ def run_md_fs():
         st.session_state['fs_buf_dom'] = buf_dom.getvalue()
         st.session_state['fs_buf_int'] = buf_int.getvalue()
         st.success("FS 처리 완료!")
-
     if 'fs_buf_all' in st.session_state:
         today = datetime.datetime.now().strftime("%y%m%d")
         st.download_button("▶ 원본 시트 다운로드", st.session_state['fs_buf_all'],
@@ -388,13 +396,10 @@ def run_md_fs():
                            file_name=f"FS_{today}_국내.xlsx")
         st.download_button("▶ 해외 시트 다운로드", st.session_state['fs_buf_int'],
                            file_name=f"FS_{today}_해외.xlsx")
-
-
 # ───────────────────────────────────────────────────
-# 3) 핵심 처리 함수 
+# 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
 def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
-
     # 1) 주문 분할
     def assign_order_numbers(group):
         total_w, suffix, out = 0, 1, []
@@ -413,37 +418,30 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
                 total_w += can * weight
                 qty -= can
         return out
-
     rows = []
     for _, grp in df.groupby('주문번호'):
         rows += assign_order_numbers(grp)
     res = pd.DataFrame(rows)
-
     # 2) 금액 처리
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
     res.loc[m, '결제통화'] = 'USD'
     res.loc[m, '상품금액'] /= 1000
     res['실결제금액'] = res['수량'] * res['상품금액']
-
     res = res[res['수량'] > 0].copy()
     res['상품명'] = res['재고명']
     res.loc[res['국가명'] == "Japan", '국가명'] = "."
-
     dom = res[res['국가코드'] == 'KR'].copy()
     intl = res[res['국가코드'] != 'KR'].copy()
-
     # ⭐ [조건 반영] 해외 주문 건에 대한 국가코드별 희망배송사 자동 지정 로직 추가
     intl['희망배송사'] = intl['국가코드'].map(
         lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
     )
-
     # 3) 특전 처리
     fromis_keywords = [
         "FROM OUR 20S",
         "프로미스나인"
     ]
-
     def generate_bonus_rows(src):
         src = src.copy()
         src['원주문번호'] = src['주문번호'].str[:20]
@@ -467,10 +465,8 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
                 r['결제통화'] = "USD"
                 bonus.append(r)
         return pd.DataFrame(bonus, columns=src.columns)
-
     dom = pd.concat([dom, generate_bonus_rows(dom)], ignore_index=True)
     intl = pd.concat([intl, generate_bonus_rows(intl)], ignore_index=True)
-
     # 4) 전화번호
     def fmt(p):
         s = re.sub(r"\D", "", str(p))
@@ -478,25 +474,19 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
             return f"{s[:3]}-{s[3:7]}-{s[7:]}"
         return s
     dom['전화번호'] = dom['전화번호'].apply(fmt)
-
     # 5) Excel 저장
     buf_all = io.BytesIO()
     buf_dom = io.BytesIO()
     buf_int = io.BytesIO()
-
     with pd.ExcelWriter(buf_all, engine="openpyxl") as w:
         df.to_excel(w, sheet_name="원본", index=False)
         dom.to_excel(w, sheet_name="국내", index=False)
         intl.to_excel(w, sheet_name="해외", index=False)
-
     with pd.ExcelWriter(buf_dom, engine="openpyxl") as w:
         dom.to_excel(w, sheet_name="국내", index=False)
-
     with pd.ExcelWriter(buf_int, engine="openpyxl") as w:
         intl.to_excel(w, sheet_name="해외", index=False)
-
     buf_all.seek(0)
     buf_dom.seek(0)
     buf_int.seek(0)
-
     return buf_all, buf_dom, buf_int
