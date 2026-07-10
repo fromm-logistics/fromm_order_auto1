@@ -465,8 +465,8 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
                 r['결제통화'] = "USD"
                 bonus.append(r)
         return pd.DataFrame(bonus, columns=src.columns)
-    dom = pd.concat([dom, generate_bonus_rows(dom)], ignore_index=True)
-    intl = pd.concat([intl, generate_bonus_rows(intl)], ignore_index=True)
+    # dom = pd.concat([dom, generate_bonus_rows(dom)], ignore_index=True)
+    # intl = pd.concat([intl, generate_bonus_rows(intl)], ignore_index=True)
     # 4) 전화번호
     def fmt(p):
         s = re.sub(r"\D", "", str(p))
