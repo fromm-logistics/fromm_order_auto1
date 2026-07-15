@@ -435,7 +435,7 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
     intl = res[res['국가코드'] != 'KR'].copy()
     # ⭐ [조건 반영] 해외 주문 건에 대한 국가코드별 희망배송사 자동 지정 로직 추가
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
+        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems')
     )
     # 3) 특전 처리
     fromis_keywords = [
