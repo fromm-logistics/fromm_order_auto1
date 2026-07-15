@@ -400,6 +400,10 @@ def run_md_fs():
 # 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
 def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
+    # [수정 추가] 안전한 연산을 위해 사전에 수량 컬럼을 정형(int) 타입으로 강제 변환합니다.
+    df = df.copy()
+    df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
+
     # 1) 주문 분할
     def assign_order_numbers(group):
         total_w, suffix, out = 0, 1, []
