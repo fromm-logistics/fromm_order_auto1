@@ -331,7 +331,7 @@ def run_album():
             df_dom['전화번호'] = df_dom['전화번호'].map(format_phone_number)
 
             df_int['희망배송사'] = df_int['국가코드'].map(
-                lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
+                lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems')
             )
             jp_mask = df_int["국가코드"] == "JP"
             df_int.loc[jp_mask, "도로명주소"] = (
