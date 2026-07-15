@@ -317,6 +317,11 @@ def run_md_ss():
 
 
 def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
+    # [수정 추가] 연산 안정성을 위해 복사본을 만들고 수량과 상품금액의 타입을 미리 맞춰줍니다.
+    df = df.copy()
+    df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
+    df['상품금액'] = pd.to_numeric(df['상품금액'], errors='coerce').fillna(1).astype(float)
+
     mask_301420 = df['재고코드'] == int(301420)
     if mask_301420.any():
         for _, row in df[mask_301420].iterrows():
@@ -327,7 +332,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
             new_row['옵션명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
             new_row['재고명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
-            new_row['상품금액'] = 1
+            new_row['상품금액'] = 1.0  # float 형태로 대입
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
             df.loc[len(df)] = new_row
@@ -343,11 +348,13 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
             new_row['옵션명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
             new_row['재고명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
-            new_row['상품금액'] = 1
+            new_row['상품금액'] = 1.0  # float 형태로 대입
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
             df.loc[len(df)] = new_row
         tp["[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"] = 1
+
+    # (이하 기존 assign_order_numbers 및 나머지 코드 동일...)
 
     def assign_order_numbers(group):
         total_w, suffix, out = 0, 1, []
