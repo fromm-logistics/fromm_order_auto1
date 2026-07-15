@@ -48,7 +48,8 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
     res = pd.DataFrame(rows)
 
     # 2) 금액·통화·실결제금액
-    res['상품금액'] = pd.to_numeric(res['상품금액'], errors='coerce').fillna(1)
+    # astype(float)를 추가하여 컬럼 타입을 실수형으로 강제 변환합니다.
+    res['상품금액'] = pd.to_numeric(res['상품금액'], errors='coerce').fillna(1).astype(float)
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드']!='KR') & (res['결제통화']=='KRW')
     res.loc[m, '결제통화'] = 'USD'
