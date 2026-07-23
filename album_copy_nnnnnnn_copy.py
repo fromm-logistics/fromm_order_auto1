@@ -343,10 +343,10 @@ def run_album():
             )
             jp_mask = df_int["국가코드"] == "JP"
             df_int.loc[jp_mask, "도로명주소"] = (
-                df_int.loc[jp_mask, "도로명주소"].fillna('') + ' ' +
-                df_int.loc[jp_mask, "상세주소"].fillna('') + ' ' +
-                df_int.loc[jp_mask, "도시"].fillna('') + ' ' +
-                df_int.loc[jp_mask, "주"].fillna('')
+                df_int.loc[jp_mask, "도로명주소"].fillna('').astype(str) + ' ' +
+                df_int.loc[jp_mask, "상세주소"].fillna('').astype(str) + ' ' +
+                df_int.loc[jp_mask, "도시"].fillna('').astype(str) + ' ' +
+                df_int.loc[jp_mask, "주"].fillna('').astype(str)
             )
             df_int.loc[jp_mask, ['상세주소', '주']] = ''
             df_int.loc[jp_mask, ['도시']] = '.'
