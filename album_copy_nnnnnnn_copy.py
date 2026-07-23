@@ -211,6 +211,11 @@ def run_album():
                 st.error("분할 설정을 완료해주세요.")
                 st.stop()
 
+            empty_mappings = [s for s, cfg in all_configs.items() if not cfg["mapping"]]
+            if empty_mappings:
+                st.error(f"다음 재고명의 매핑을 입력해주세요: {', '.join(empty_mappings)}")
+                st.stop()
+
             if '배송진행여부' in df.columns:
                 df = df[df['배송진행여부'] != 'cancelled']
 
@@ -234,6 +239,9 @@ def run_album():
                     mapping = config["mapping"]
                     limit = config["box_limit"]
                     p_names = list(mapping.keys())
+                    if not p_names:  # ← 추가
+                        st.error(f"'{s_stock}'의 매핑이 비어있습니다.")
+                        st.stop()
                     
                     # 유닛 전개 및 순환 이름 배정
                     temp_units = []
