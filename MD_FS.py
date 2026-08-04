@@ -328,7 +328,31 @@ target_products={
     "[이태빈 팬미팅 예약판매 MD] 아크릴 스탠드" : 300,
     "[이태빈 팬미팅 예약판매 MD] 엽서세트" : 300,
     "[이태빈 팬미팅 예약판매 MD] 패브릭 포스터" : 750,
-    "[이태빈 팬미팅 예약판매 MD] 포토북" : 750
+    "[이태빈 팬미팅 예약판매 MD] 포토북" : 750,
+    "[박재범 2025 SERENADES & BODY ROLLS] 10CM DOLL" : 300,
+    "[박재범 2025 SERENADES & BODY ROLLS] CHECK SHIRT" : 750,
+    "[박재범 2025 SERENADES & BODY ROLLS] MINI BAG" : 1000,
+    "[박재범 2025 SERENADES & BODY ROLLS] REMEDY MAKING BOOK" : 1000,
+    "[박재범 2025 SERENADES & BODY ROLLS] REUSABLE BAG" : 750,
+    "[박재범 2025 SERENADES & BODY ROLLS] RUG" : 3000,
+    "[박재범 2025 SERENADES & BODY ROLLS] SMART TOK" : 300,
+    "[박재범 2025 SERENADES & BODY ROLLS] WIND BREAKER JACKET" : 1500,
+    "[프로미스나인 팝업_GLOW] 랜덤 트레이딩 카드" : 100,
+    "[프로미스나인 팝업_GLOW] 리유저블 백" : 750,
+    "[프로미스나인 팝업_GLOW] 바인더 북" : 1875,
+    "[프로미스나인 팝업_GLOW] 반팔티셔츠" : 750,
+    "[프로미스나인 팝업_GLOW] 뱃지세트 (6종)" : 500,
+    "[프로미스나인 팝업_GLOW] 스트레스볼 (CHAEYOUNG ver.)" : 750,
+    "[프로미스나인 팝업_GLOW] 스트레스볼 (HAYOUNG ver.)" : 750,
+    "[프로미스나인 팝업_GLOW] 스트레스볼 (JIHEON ver.)" : 750,
+    "[프로미스나인 팝업_GLOW] 스트레스볼 (JIWON ver.)" : 750,
+    "[프로미스나인 팝업_GLOW] 스트레스볼 (NAGYUNG ver.)" : 750,
+    "[프로미스나인 팝업_GLOW] 키링 (CHAEYOUNG ver.)" : 300,
+    "[프로미스나인 팝업_GLOW] 키링 (HAYOUNG ver.)" : 300,
+    "[프로미스나인 팝업_GLOW] 키링 (JIHEON ver. )" : 300,
+    "[프로미스나인 팝업_GLOW] 키링 (JIWON ver.)" : 300,
+    "[프로미스나인 팝업_GLOW] 키링 (NAGYUNG ver.)" : 300,
+    "[프로미스나인 팝업_GLOW] 피크업 피규어 (5종)" : 500
 }
 box_limit = 15000  # 기본 박스 최대 용량
 
