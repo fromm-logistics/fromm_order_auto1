@@ -3,11 +3,11 @@ import pandas as pd
 import io, re, random
 import datetime
 import math
-import numpy as np  
+import numpy as np
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
 
-# 가격 예측 및 카테고리 설정   
+# 가격 예측 및 카테고리 설정
 def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
     df = df.copy()
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)  # ← 추가
@@ -29,7 +29,7 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
 
                 max_packable = (box_limit - total_weight) / weight if weight > 0 else qty
                 can_pack = min(qty, math.floor(max_packable))
-                if can_pack <= 0:  
+                if can_pack <= 0:
                     can_pack = 1
 
                 new_row = row.copy()
@@ -102,13 +102,13 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
 
     intl['도시'] = intl.apply(
         lambda r: r['주'] if pd.isna(r['도시']) or str(r['도시']).strip() == '' else r['도시'], axis=1)
-    
+
     mask_jp = intl['국가코드'] == 'JP'
     intl.loc[mask_jp, '도로명주소'] = (
-        intl.loc[mask_jp, '도로명주소'].fillna('') + ' ' +
-        intl.loc[mask_jp, '상세주소'].fillna('') + ' ' +
-        intl.loc[mask_jp, '도시'].fillna('') + ' ' +
-        intl.loc[mask_jp, '주'].fillna('')
+        intl.loc[mask_jp, '도로명주소'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '상세주소'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '도시'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '주'].fillna('').astype(str)
     ).str.strip()
 
     intl.loc[mask_jp, ['상세주소', '주']] = ''
@@ -182,7 +182,7 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
 
     return buf_all, buf_dom, buf_int
 
-   
+
 def run_md_general():
     st.button(
         "◀ MD 창으로 돌아가기",
@@ -259,7 +259,7 @@ def run_md_general():
                     default_weight = 100
 
                 with st.container():
-                    cols = st.columns([1])  
+                    cols = st.columns([1])
                     with cols[0]:
                         st.markdown(f"<div class='product-box'><div class='product-name'>{prod}</div>", unsafe_allow_html=True)
                         weight = st.number_input(
@@ -297,7 +297,7 @@ def run_md_general():
                 st.session_state['fs_buf_int'],
                 file_name=f"일반상품_{today}_해외.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            
+
 
     elif st.session_state.step == 2:
         st.subheader("2️⃣ 가격 예측 및 카테고리 설정")
@@ -354,7 +354,7 @@ def run_md_general():
                         }).reset_index()
                         summary['보정청구무게'] = summary['실청구무게'].apply(lambda x: int(math.ceil(x / 500.0)) * 500)
                         return summary
-                    
+
                     dom_pivot = summarize(df_domestic.copy(), '국내')
                     int_pivot = summarize(df_international.copy(), '해외')
 
@@ -389,7 +389,7 @@ def run_md_general():
                         total = df.loc[~df['주문번호'].eq('총 합계'), numeric_cols].sum()
                         total['주문번호'] = '총 합계'
                         return pd.concat([df, pd.DataFrame([total])], ignore_index=True)
-                    
+
                     dom_pivot[['다보내 예상 금액', '패박 예상 금액']] = dom_pivot.apply(lambda row: pd.Series([
                         2300 + 1000 + min(1000, max(0, (row['수량'] - 4) * 50)) + 100,
                         2100 + 1100 + ((row['수량'] - 4) * 70 + 150 if row['수량'] >= 5 else 150)
@@ -432,8 +432,8 @@ def run_md_general():
                             return base_price + extra_unit_count * unit_price
 
                     int_pivot['고객수령금액'] = int_pivot.apply(get_admin_price, axis=1)
-                    int_pivot['고객수령금액'] *= 1.3 
-                    
+                    int_pivot['고객수령금액'] *= 1.3
+
                     total_dom_rows = len(dom_pivot[dom_pivot['주문번호'] != '총 합계'])
                     total_int_rows = len(int_pivot[int_pivot['주문번호'] != '총 합계'])
                     total_rows = total_dom_rows + total_int_rows
@@ -472,7 +472,7 @@ def run_md_general():
                     lowest_cost = min(int(dabo_domestic_sum + dabo_international_sum), int(fast_domestic_sum + fast_international_sum))
                     recommendation_pl = int(total_customer_amount) - lowest_cost
                     prediction_summary["추천물류사P/L"] = recommendation_pl
-                    
+
                     output = io.BytesIO()
                     with pd.ExcelWriter(output, engine='openpyxl') as writer:
                         prediction_summary.to_excel(writer, sheet_name='예측금액', index=False, startcol=1, startrow=1)
@@ -482,7 +482,7 @@ def run_md_general():
                         ws['B6'] = int(dabo_domestic_sum + dabo_international_sum)
                         ws['C6'] = int(fast_domestic_sum + fast_international_sum)
 
-                        wb['예측'] = None  
+                        wb['예측'] = None
                         df_origin.to_excel(writer, sheet_name='원본', index=False)
                         df_domestic.to_excel(writer, sheet_name='국내_주문서', index=False)
                         df_international.to_excel(writer, sheet_name='해외_주문서', index=False)
