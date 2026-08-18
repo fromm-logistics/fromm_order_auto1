@@ -566,7 +566,7 @@ def run_invoice_main():
                                             _col_waybill = '해외배송송장번호' if '해외배송송장번호' in df_raw.columns else df_raw.columns[4]
                                             sfx_mask = df_raw[_col_courier].astype(str).str.strip().str.lower() == 'sfexpress'
                                             if sfx_mask.any():
-                                                df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].values
+                                                df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].astype(str).str.replace(r'\s+', '', regex=True).values
                                                 df_raw.loc[sfx_mask, _col_courier] = 'fastbox'
 
                                         # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
