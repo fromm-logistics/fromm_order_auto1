@@ -557,17 +557,17 @@ def run_invoice_main():
                                         df_raw.columns = df_raw.columns.astype(str).str.strip()
 
                                         # 0. Sfexpress 전처리
-                                        #    D열(index 3) 값이 'Sfexpress'이면:
-                                        #    E열(index 4) ← H열(index 7) 값으로 교체
-                                        #    D열(index 3) ← 'fastbox'로 교체
+                                        #    '희망배송사' 값이 'sfexpress'(대소문자 무관)이면:
+                                        #    '해외배송송장번호' ← H열(index 7) 값으로 교체
+                                        #    '희망배송사' ← 'fastbox'로 교체
                                         if len(df_raw.columns) >= 8:
-                                            col_d = df_raw.columns[3]
-                                            col_e = df_raw.columns[4]
                                             col_h = df_raw.columns[7]
-                                            sfx_mask = df_raw[col_d].astype(str).str.strip() == 'Sfexpress'
+                                            _col_courier = '희망배송사' if '희망배송사' in df_raw.columns else df_raw.columns[3]
+                                            _col_waybill = '해외배송송장번호' if '해외배송송장번호' in df_raw.columns else df_raw.columns[4]
+                                            sfx_mask = df_raw[_col_courier].astype(str).str.strip().str.lower() == 'sfexpress'
                                             if sfx_mask.any():
-                                                df_raw.loc[sfx_mask, col_e] = df_raw.loc[sfx_mask, col_h].values
-                                                df_raw.loc[sfx_mask, col_d] = 'fastbox'
+                                                df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].values
+                                                df_raw.loc[sfx_mask, _col_courier] = 'fastbox'
 
                                         # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
                                         col_id = '판매사 품주번호'
