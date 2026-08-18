@@ -322,7 +322,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "Wonderwall(해외)"]
+                                    df = df[df['판매처'] != "wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -555,6 +555,19 @@ def run_invoice_main():
                                             io.BytesIO(data), engine='openpyxl', dtype=str
                                         )
                                         df_raw.columns = df_raw.columns.astype(str).str.strip()
+
+                                        # 0. Sfexpress 전처리
+                                        #    D열(index 3) 값이 'Sfexpress'이면:
+                                        #    E열(index 4) ← H열(index 7) 값으로 교체
+                                        #    D열(index 3) ← 'fastbox'로 교체
+                                        if len(df_raw.columns) >= 8:
+                                            col_d = df_raw.columns[3]
+                                            col_e = df_raw.columns[4]
+                                            col_h = df_raw.columns[7]
+                                            sfx_mask = df_raw[col_d].astype(str).str.strip() == 'Sfexpress'
+                                            if sfx_mask.any():
+                                                df_raw.loc[sfx_mask, col_e] = df_raw.loc[sfx_mask, col_h].values
+                                                df_raw.loc[sfx_mask, col_d] = 'fastbox'
 
                                         # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
                                         col_id = '판매사 품주번호'
