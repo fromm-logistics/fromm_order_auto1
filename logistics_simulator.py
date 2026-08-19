@@ -9,13 +9,13 @@ SHEET_NAME = "원본 업로드"
 
 # 열 이름 (CSV 헤더 기준)
 CANCEL_COL = '배송진행여부'   # AC열
-KEEP_COLS_ORDERED = ['주문일시', '주문번호', '옵션명', '수량', '국가코드']  # B, C, U, W, M
+KEEP_COLS_ORDERED = ['주문일시', '주문번호', '재고명', '수량', '국가코드']  # B, C, V, W, M
 # 열 이름이 없을 때 사용할 0-based 인덱스
 KEEP_IDX = {
     '주문일시': 1,   # B
     '주문번호': 2,   # C
     '국가코드': 12,  # M
-    '옵션명':   20,  # U
+    '재고명':   21,  # V
     '수량':     22,  # W
 }
 CANCEL_IDX = 28  # AC
@@ -103,7 +103,13 @@ def run_logistics_simulator():
     st.write("---")
     st.markdown("### 2단계: Google Sheets '원본 업로드' 시트에 붙여넣기")
 
-    if st.button("📤 Google Sheets에 업로드", use_container_width=True):
+    col1, col2 = st.columns(2)
+    with col1:
+        upload_clicked = st.button("📤 Google Sheets에 업로드", use_container_width=True)
+    with col2:
+        st.link_button("🔗 시트 열기", "https://docs.google.com/spreadsheets/d/1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg/edit?gid=700911321#gid=700911321", use_container_width=True)
+
+    if upload_clicked:
         with st.spinner("업로드 중..."):
             try:
                 gc = _get_gspread_client()
