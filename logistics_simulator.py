@@ -134,7 +134,10 @@ def run_logistics_simulator():
                 ws = sh.worksheet(SHEET_NAME)
 
                 # 기존 데이터 클리어 (2행부터, 현재 시트 행 수 기준)
-                values = df.fillna("").values.tolist()
+                df_upload = df.copy()
+                if '수량' in df_upload.columns:
+                    df_upload['수량'] = pd.to_numeric(df_upload['수량'], errors='coerce').fillna(0).astype(int)
+                values = df_upload.fillna("").values.tolist()
                 existing_rows = ws.row_count
                 if existing_rows > 1:
                     ws.batch_clear([f"A2:E{existing_rows}"])
