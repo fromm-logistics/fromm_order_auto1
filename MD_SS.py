@@ -421,10 +421,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
 
     dom['전화번호'] = dom['전화번호'].apply(fmt)
 
-    # 국제 컬럼 보정
-    intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
-    )
     intl['주'] = intl.apply(
         lambda r: r['국가명'] if pd.isna(r['주']) or str(r['주']).strip() == '' else r['주'], axis=1)
     intl['도시'] = intl.apply(
