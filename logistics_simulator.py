@@ -133,13 +133,14 @@ def run_logistics_simulator():
                 sh = gc.open_by_key(SPREADSHEET_ID)
                 ws = sh.worksheet(SHEET_NAME)
 
-                # 기존 데이터 클리어 (2행부터)
-                last_col = "E"  # 5개 열 A~E
-                ws.batch_clear([f"A2:{last_col}100000"])
+                # 기존 데이터 클리어 (2행부터, 현재 시트 행 수 기준)
+                values = df.fillna("").values.tolist()
+                existing_rows = ws.row_count
+                if existing_rows > 1:
+                    ws.batch_clear([f"A2:E{existing_rows}"])
 
                 # 데이터 업로드 (2행부터)
-                values = df.fillna("").values.tolist()
-                ws.update(f"A2", values)
+                ws.update(range_name="A2", values=values)
 
                 st.success(f"✅ {len(df)}행 업로드 완료!")
 
