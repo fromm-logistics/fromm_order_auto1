@@ -4,6 +4,7 @@ from album_copy_nnnnnnn_copy import run_album
 from md_main import run_md_main, run_md_fs_page, run_md_ss_page, run_md_general_page
 from invoice_main import run_invoice_main
 from photocard_main import run_photocard_main
+from logistics_simulator import run_logistics_simulator
 
 # 페이지 상태 초기화 (메인에서만!)
 if 'page' not in st.session_state:
@@ -30,6 +31,9 @@ def to_invoice_main():
 def to_photocard_main():
     st.session_state.page = 'photocard'
 
+def to_logistics_simulator():
+    st.session_state.page = 'logistics_simulator'
+
 # --- 화면 라우팅 처리 ---
 
 # 1. 메인 메뉴 화면
@@ -43,7 +47,7 @@ if st.session_state.page == 'main':
     st.button("앨범 나누기", on_click=to_album)
     st.button("MD 나누기", on_click=to_md_main)
     st.button("송장", on_click=to_invoice_main)
-    st.button("포토카드 수량", on_click=to_photocard_main)
+    st.button("포토카드 갯수", on_click=to_photocard_main)
 
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
@@ -51,7 +55,7 @@ if st.session_state.page == 'main':
         '구현 예정 기능</h2>',
         unsafe_allow_html=True
     )
-    st.button("물류비 시뮬레이터 (구현예정)", disabled=True)
+    st.button("물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
 elif st.session_state.page == 'invoice_main':
@@ -75,3 +79,6 @@ elif st.session_state.page == 'md_general':
 
 elif st.session_state.page == 'photocard':
     run_photocard_main()
+
+elif st.session_state.page == 'logistics_simulator':
+    run_logistics_simulator()
