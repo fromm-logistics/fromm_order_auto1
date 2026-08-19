@@ -48,13 +48,6 @@ if st.session_state.page == 'main':
     st.button("MD 나누기", on_click=to_md_main)
     st.button("송장", on_click=to_invoice_main)
     st.button("포토카드 갯수", on_click=to_photocard_main)
-
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown(
-        '<h2 style="color:#888888; font-size:28px; margin-bottom:5px;">'
-        '구현 예정 기능</h2>',
-        unsafe_allow_html=True
-    )
     st.button("물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
