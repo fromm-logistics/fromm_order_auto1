@@ -95,6 +95,23 @@ def run_logistics_simulator():
     # 사용자 지정 순서로 재배열
     df = df[[c for c in KEEP_COLS_ORDERED if c in df.columns]]
 
+    # ── STEP 3.5: 삭제할 행 선택 (재고명 기준) ──────────
+    st.write("---")
+    st.markdown("### 삭제할 행 선택")
+
+    if '재고명' in df.columns:
+        unique_items = sorted(df['재고명'].dropna().astype(str).unique().tolist())
+        exclude_items = st.multiselect(
+            "제외할 재고명을 선택하세요 (복수 선택 가능)",
+            options=unique_items,
+            default=[],
+            key="logistics_exclude_items",
+        )
+        if exclude_items:
+            before = len(df)
+            df = df[~df['재고명'].astype(str).isin(exclude_items)]
+            st.info(f"🗑️ {before - len(df)}행 제거됨 → 남은 행: {len(df)}")
+
     st.markdown("### 미리보기 (상위 10행)")
     st.dataframe(df.head(10), use_container_width=True)
     st.write(f"총 **{len(df)}행** / **{len(df.columns)}열**")
