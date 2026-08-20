@@ -156,26 +156,3 @@ def run_logistics_simulator():
                 st.error("❌ 스프레드시트를 찾을 수 없습니다. 서비스 계정에 공유 권한이 있는지 확인하세요.")
             except Exception as e:
                 st.error(f"❌ 업로드 실패: {e}")
-
-    # ── 설정 안내 ───────────────────────────────────────
-    with st.expander("⚙️ Google Sheets 연동 설정 방법"):
-        st.markdown("""
-1. [Google Cloud Console](https://console.cloud.google.com/)에서 **서비스 계정** 생성
-2. **Google Sheets API** 및 **Google Drive API** 활성화
-3. 서비스 계정 → **키 추가 → JSON 다운로드**
-4. Streamlit Cloud → 앱 설정 → **Secrets**에 아래 형식으로 입력:
-
-```toml
-[gcp_service_account]
-type = "service_account"
-project_id = "your-project-id"
-private_key_id = "..."
-private_key = "-----BEGIN RSA PRIVATE KEY-----\\n...\\n-----END RSA PRIVATE KEY-----\\n"
-client_email = "your-service-account@your-project.iam.gserviceaccount.com"
-client_id = "..."
-auth_uri = "https://accounts.google.com/o/oauth2/auth"
-token_uri = "https://oauth2.googleapis.com/token"
-```
-
-5. 위 스프레드시트를 서비스 계정 이메일에 **편집자** 권한으로 공유
-        """)
