@@ -95,7 +95,19 @@ def run_logistics_simulator():
     # 사용자 지정 순서로 재배열
     df = df[[c for c in KEEP_COLS_ORDERED if c in df.columns]]
 
-    # ── STEP 3.5: 삭제할 행 선택 (재고명 기준) ──────────
+    # ── STEP 3.5: 중복 행 합치기 (수량 합산) ─────────────
+    group_cols = [c for c in ['주문일시', '주문번호', '재고명', '국가코드'] if c in df.columns]
+    if group_cols and '수량' in df.columns:
+        df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0)
+        before = len(df)
+        df = df.groupby(group_cols, as_index=False)['수량'].sum()
+        merged = before - len(df)
+        if merged > 0:
+            st.info(f"🔀 중복 행 {merged}개 합산됨 → 남은 행: {len(df)}")
+        # 열 순서 복원
+        df = df[[c for c in KEEP_COLS_ORDERED if c in df.columns]]
+
+    # ── STEP 3.7: 삭제할 행 선택 (재고명 기준) ──────────
     st.write("---")
     st.markdown("### 삭제할 행 선택")
 
