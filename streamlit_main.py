@@ -41,7 +41,7 @@ if st.session_state.page == 'main':
     st.title("▶️ Fromm logistics team")
     st.markdown(
         '<h2 style="color:#1f77b4; font-size:28px; margin-bottom:5px;">'
-        'MENU📋</h2>',
+        '📋 MENU</h2>',
         unsafe_allow_html=True
     )
     st.button("앨범 나누기", on_click=to_album)
