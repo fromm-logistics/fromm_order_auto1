@@ -40,34 +40,103 @@ def to_logistics_simulator():
 if st.session_state.page == 'main':
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
 
     /* ── 배경 ── */
     .stApp {
-        background: #0e0810;
+        background: #0c0810;
         font-family: 'Noto Sans KR', sans-serif;
     }
 
-    /* 장식용 그라디언트 오브 */
-    .stApp::before {
-        content: '';
+    /* ── Light Rays 애니메이션 ── */
+    @keyframes rotateRays {
+        from { transform: translate(-50%, 0) rotate(0deg); }
+        to   { transform: translate(-50%, 0) rotate(360deg); }
+    }
+    @keyframes pulseFade {
+        0%, 100% { opacity: 0.7; }
+        50%       { opacity: 1.0; }
+    }
+
+    .light-rays-wrap {
         position: fixed;
-        top: -20%;
-        left: -10%;
-        width: 55%;
-        height: 55%;
-        background: radial-gradient(ellipse, rgba(200,130,170,0.13) 0%, transparent 70%);
+        top: -60vh;
+        left: 50%;
+        transform: translate(-50%, 0);
+        width: 300vw;
+        height: 300vh;
         pointer-events: none;
         z-index: 0;
+        animation: rotateRays 40s linear infinite, pulseFade 8s ease-in-out infinite;
+        background: conic-gradient(
+            from 0deg at 50% 50%,
+            transparent       0deg,
+            rgba(210,145,180,0.07)  4deg,
+            transparent       8deg,
+            transparent      22deg,
+            rgba(185,120,210,0.05) 26deg,
+            transparent      30deg,
+            transparent      44deg,
+            rgba(210,145,180,0.08) 48deg,
+            transparent      52deg,
+            transparent      70deg,
+            rgba(185,120,210,0.05) 73deg,
+            transparent      77deg,
+            transparent      95deg,
+            rgba(210,145,180,0.07) 98deg,
+            transparent     102deg,
+            transparent     118deg,
+            rgba(185,120,210,0.05) 121deg,
+            transparent     125deg,
+            transparent     145deg,
+            rgba(210,145,180,0.07) 148deg,
+            transparent     152deg,
+            transparent     170deg,
+            rgba(185,120,210,0.04) 173deg,
+            transparent     177deg,
+            transparent     195deg,
+            rgba(210,145,180,0.06) 198deg,
+            transparent     202deg,
+            transparent     220deg,
+            rgba(185,120,210,0.05) 223deg,
+            transparent     227deg,
+            transparent     246deg,
+            rgba(210,145,180,0.07) 249deg,
+            transparent     253deg,
+            transparent     270deg,
+            rgba(185,120,210,0.04) 273deg,
+            transparent     277deg,
+            transparent     295deg,
+            rgba(210,145,180,0.06) 298deg,
+            transparent     302deg,
+            transparent     320deg,
+            rgba(185,120,210,0.05) 323deg,
+            transparent     327deg,
+            transparent     345deg,
+            rgba(210,145,180,0.06) 348deg,
+            transparent     352deg,
+            transparent     360deg
+        );
+        filter: blur(8px);
     }
-    .stApp::after {
+
+    /* 위쪽 빛 집중 마스크 */
+    .light-rays-wrap::after {
         content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(ellipse 60% 50% at 50% 33%, transparent 0%, #0c0810 75%);
+    }
+
+    /* 상단 글로우 */
+    .top-glow {
         position: fixed;
-        bottom: -15%;
-        right: -10%;
-        width: 50%;
-        height: 50%;
-        background: radial-gradient(ellipse, rgba(160,110,200,0.10) 0%, transparent 70%);
+        top: -10vh;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80vw;
+        height: 50vh;
+        background: radial-gradient(ellipse at 50% 0%, rgba(200,130,175,0.18) 0%, transparent 70%);
         pointer-events: none;
         z-index: 0;
     }
@@ -88,9 +157,9 @@ if st.session_state.page == 'main':
     .fromm-wordmark {
         font-size: 2.6rem;
         font-weight: 700;
-        letter-spacing: 6px;
+        letter-spacing: 8px;
         text-transform: uppercase;
-        background: linear-gradient(135deg, #f0c8d8 0%, #d4a0c0 40%, #b888c8 100%);
+        background: linear-gradient(135deg, #f0c8d8 0%, #d4a0c0 45%, #b888c8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -98,61 +167,64 @@ if st.session_state.page == 'main':
         margin-bottom: 6px;
     }
     .fromm-sub {
-        font-size: 0.78rem;
-        letter-spacing: 3px;
+        font-size: 0.75rem;
+        letter-spacing: 3.5px;
         text-transform: uppercase;
-        color: rgba(255,255,255,0.3);
+        color: rgba(255,255,255,0.28);
         margin: 0;
     }
     .fromm-divider {
-        width: 40px;
+        width: 36px;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(200,140,180,0.6), transparent);
-        margin: 16px auto 0;
+        background: linear-gradient(90deg, transparent, rgba(210,140,180,0.7), transparent);
+        margin: 18px auto 0;
     }
 
     /* ── 섹션 라벨 ── */
     .fromm-section {
-        font-size: 0.68rem;
+        font-size: 0.67rem;
         font-weight: 600;
         letter-spacing: 3px;
         text-transform: uppercase;
-        color: rgba(200,140,175,0.55);
-        margin: 0 0 12px 2px;
+        color: rgba(200,140,175,0.45);
+        margin: 0 0 10px 2px;
     }
 
     /* ── 버튼 ── */
     .stButton > button {
         width: 100% !important;
         background: rgba(255,255,255,0.03) !important;
-        color: rgba(255,255,255,0.85) !important;
-        border: 1px solid rgba(200,140,175,0.18) !important;
+        color: rgba(255,255,255,0.82) !important;
+        border: 1px solid rgba(210,140,175,0.15) !important;
         border-radius: 12px !important;
         padding: 17px 22px !important;
-        font-size: 0.97rem !important;
+        font-size: 0.96rem !important;
         font-weight: 500 !important;
         font-family: 'Noto Sans KR', sans-serif !important;
         text-align: left !important;
-        transition: all 0.25s ease !important;
+        transition: all 0.22s ease !important;
         margin-bottom: 6px !important;
-        backdrop-filter: blur(6px) !important;
+        backdrop-filter: blur(8px) !important;
         letter-spacing: 0.3px !important;
     }
     .stButton > button:hover {
-        background: rgba(200,130,170,0.10) !important;
-        border-color: rgba(200,130,170,0.5) !important;
+        background: rgba(210,130,170,0.09) !important;
+        border-color: rgba(210,130,170,0.45) !important;
         color: #ffffff !important;
-        transform: translateX(5px) !important;
-        box-shadow: 0 4px 24px rgba(180,100,150,0.15) !important;
+        transform: translateX(6px) !important;
+        box-shadow: 0 4px 24px rgba(180,100,150,0.12) !important;
     }
     .stButton > button:active {
         transform: translateX(2px) !important;
     }
     </style>
 
+    <div class="light-rays-wrap"></div>
+    <div class="top-glow"></div>
+
     <div class="fromm-header">
         <span class="fromm-wordmark">fromm</span>
-        <p class="fromm-sub">Logistics team</p>
+        <p class="fromm-sub">Logistics System</p>
         <div class="fromm-divider"></div>
     </div>
     <div class="fromm-section">메뉴</div>
