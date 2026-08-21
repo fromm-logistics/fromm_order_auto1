@@ -152,7 +152,7 @@ if st.session_state.page == 'main':
 
     <div class="fromm-header">
         <span class="fromm-wordmark">fromm</span>
-        <p class="fromm-sub">Logistics System</p>
+        <p class="fromm-sub">Logistics team</p>
         <div class="fromm-divider"></div>
     </div>
     <div class="fromm-section">메뉴</div>
