@@ -40,96 +40,128 @@ def to_logistics_simulator():
 if st.session_state.page == 'main':
     st.markdown("""
     <style>
-    /* ── 배경 그라디언트 ── */
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;600;700&display=swap');
+
+    /* ── 배경 ── */
     .stApp {
-        background: linear-gradient(160deg, #0d1117 0%, #161b27 50%, #0d1117 100%);
+        background: #0e0810;
+        font-family: 'Noto Sans KR', sans-serif;
     }
 
-    /* ── 사이드바 숨기기 영역 제거용 ── */
-    [data-testid="stSidebar"] { display: none; }
+    /* 장식용 그라디언트 오브 */
+    .stApp::before {
+        content: '';
+        position: fixed;
+        top: -20%;
+        left: -10%;
+        width: 55%;
+        height: 55%;
+        background: radial-gradient(ellipse, rgba(200,130,170,0.13) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
+    .stApp::after {
+        content: '';
+        position: fixed;
+        bottom: -15%;
+        right: -10%;
+        width: 50%;
+        height: 50%;
+        background: radial-gradient(ellipse, rgba(160,110,200,0.10) 0%, transparent 70%);
+        pointer-events: none;
+        z-index: 0;
+    }
 
-    /* ── 메인 컨테이너 중앙 정렬 ── */
+    /* ── 레이아웃 ── */
     .block-container {
-        max-width: 560px !important;
-        padding-top: 60px !important;
+        max-width: 520px !important;
+        padding-top: 64px !important;
+        position: relative;
+        z-index: 1;
     }
 
-    /* ── 헤더 타이틀 ── */
-    .main-title {
+    /* ── 헤더 ── */
+    .fromm-header {
         text-align: center;
-        padding: 0 0 36px 0;
+        padding-bottom: 44px;
     }
-    .main-title .logo {
-        font-size: 3rem;
-        display: block;
-        margin-bottom: 8px;
-    }
-    .main-title h1 {
-        font-size: 1.9rem;
+    .fromm-wordmark {
+        font-size: 2.6rem;
         font-weight: 700;
-        color: #f0f4ff;
-        margin: 0;
-        letter-spacing: -0.5px;
+        letter-spacing: 6px;
+        text-transform: uppercase;
+        background: linear-gradient(135deg, #f0c8d8 0%, #d4a0c0 40%, #b888c8 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 6px;
     }
-    .main-title p {
-        color: #6b7a99;
-        font-size: 0.9rem;
-        margin: 6px 0 0 0;
+    .fromm-sub {
+        font-size: 0.78rem;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.3);
+        margin: 0;
+    }
+    .fromm-divider {
+        width: 40px;
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(200,140,180,0.6), transparent);
+        margin: 16px auto 0;
     }
 
     /* ── 섹션 라벨 ── */
-    .section-label {
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 2px;
+    .fromm-section {
+        font-size: 0.68rem;
+        font-weight: 600;
+        letter-spacing: 3px;
         text-transform: uppercase;
-        color: #4a90d9;
-        margin: 28px 0 10px 2px;
+        color: rgba(200,140,175,0.55);
+        margin: 0 0 12px 2px;
     }
 
-    /* ── 버튼 카드 스타일 ── */
+    /* ── 버튼 ── */
     .stButton > button {
         width: 100% !important;
-        background: rgba(255,255,255,0.04) !important;
-        color: #e8edf5 !important;
-        border: 1px solid rgba(255,255,255,0.09) !important;
-        border-radius: 14px !important;
-        padding: 18px 22px !important;
-        font-size: 1.05rem !important;
-        font-weight: 600 !important;
+        background: rgba(255,255,255,0.03) !important;
+        color: rgba(255,255,255,0.85) !important;
+        border: 1px solid rgba(200,140,175,0.18) !important;
+        border-radius: 12px !important;
+        padding: 17px 22px !important;
+        font-size: 0.97rem !important;
+        font-weight: 500 !important;
+        font-family: 'Noto Sans KR', sans-serif !important;
         text-align: left !important;
-        transition: all 0.2s ease !important;
-        margin-bottom: 2px !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
-        letter-spacing: 0.2px !important;
+        transition: all 0.25s ease !important;
+        margin-bottom: 6px !important;
+        backdrop-filter: blur(6px) !important;
+        letter-spacing: 0.3px !important;
     }
     .stButton > button:hover {
-        background: rgba(74, 144, 217, 0.12) !important;
-        border-color: rgba(74, 144, 217, 0.4) !important;
+        background: rgba(200,130,170,0.10) !important;
+        border-color: rgba(200,130,170,0.5) !important;
         color: #ffffff !important;
-        transform: translateY(-1px) !important;
-        box-shadow: 0 6px 20px rgba(74, 144, 217, 0.15) !important;
+        transform: translateX(5px) !important;
+        box-shadow: 0 4px 24px rgba(180,100,150,0.15) !important;
     }
     .stButton > button:active {
-        transform: translateY(0px) !important;
+        transform: translateX(2px) !important;
     }
-
-    /* ── 구분선 ── */
-    hr { border-color: rgba(255,255,255,0.07) !important; }
     </style>
 
-    <div class="main-title">
-        <span class="logo">📦</span>
-        <h1>Fromm Logistics</h1>
-        <p>물류 자동화 도구 모음</p>
+    <div class="fromm-header">
+        <span class="fromm-wordmark">fromm</span>
+        <p class="fromm-sub">Logistics System</p>
+        <div class="fromm-divider"></div>
     </div>
-    <div class="section-label">메뉴</div>
+    <div class="fromm-section">메뉴</div>
     """, unsafe_allow_html=True)
 
     st.button("📀  앨범 나누기", on_click=to_album)
     st.button("🛍️  MD 나누기", on_click=to_md_main)
     st.button("🧾  송장", on_click=to_invoice_main)
-    st.button("🃏  포토카드 수", on_click=to_photocard_main)
+    st.button("🃏  포토카드 개수", on_click=to_photocard_main)
     st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
