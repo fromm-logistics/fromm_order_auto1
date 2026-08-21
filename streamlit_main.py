@@ -38,10 +38,10 @@ def to_logistics_simulator():
 
 # 1. 메인 메뉴 화면
 if st.session_state.page == 'main':
-    st.title("📋 메인 메뉴")
+    st.title("▶️ Fromm logistics team")
     st.markdown(
         '<h2 style="color:#1f77b4; font-size:28px; margin-bottom:5px;">'
-        '구현된 기능</h2>',
+        'MENU📋</h2>',
         unsafe_allow_html=True
     )
     st.button("앨범 나누기", on_click=to_album)
