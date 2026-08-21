@@ -54,7 +54,7 @@ if st.session_state.page == 'main':
         to   { transform: translate(-50%, 0) rotate(360deg); }
     }
     @keyframes pulseFade {
-        0%, 100% { opacity: 0.7; }
+        0%, 100% { opacity: 0.85; }
         50%       { opacity: 1.0; }
     }
 
@@ -71,61 +71,53 @@ if st.session_state.page == 'main':
         background: conic-gradient(
             from 0deg at 50% 50%,
             transparent       0deg,
-            rgba(210,145,180,0.07)  4deg,
+            rgba(220,155,190,0.22)  4deg,
             transparent       8deg,
             transparent      22deg,
-            rgba(185,120,210,0.05) 26deg,
+            rgba(190,130,220,0.18) 26deg,
             transparent      30deg,
             transparent      44deg,
-            rgba(210,145,180,0.08) 48deg,
+            rgba(220,155,190,0.25) 48deg,
             transparent      52deg,
             transparent      70deg,
-            rgba(185,120,210,0.05) 73deg,
+            rgba(190,130,220,0.18) 73deg,
             transparent      77deg,
             transparent      95deg,
-            rgba(210,145,180,0.07) 98deg,
+            rgba(220,155,190,0.22) 98deg,
             transparent     102deg,
             transparent     118deg,
-            rgba(185,120,210,0.05) 121deg,
+            rgba(190,130,220,0.18) 121deg,
             transparent     125deg,
             transparent     145deg,
-            rgba(210,145,180,0.07) 148deg,
+            rgba(220,155,190,0.20) 148deg,
             transparent     152deg,
             transparent     170deg,
-            rgba(185,120,210,0.04) 173deg,
+            rgba(190,130,220,0.15) 173deg,
             transparent     177deg,
             transparent     195deg,
-            rgba(210,145,180,0.06) 198deg,
+            rgba(220,155,190,0.20) 198deg,
             transparent     202deg,
             transparent     220deg,
-            rgba(185,120,210,0.05) 223deg,
+            rgba(190,130,220,0.18) 223deg,
             transparent     227deg,
             transparent     246deg,
-            rgba(210,145,180,0.07) 249deg,
+            rgba(220,155,190,0.22) 249deg,
             transparent     253deg,
             transparent     270deg,
-            rgba(185,120,210,0.04) 273deg,
+            rgba(190,130,220,0.15) 273deg,
             transparent     277deg,
             transparent     295deg,
-            rgba(210,145,180,0.06) 298deg,
+            rgba(220,155,190,0.20) 298deg,
             transparent     302deg,
             transparent     320deg,
-            rgba(185,120,210,0.05) 323deg,
+            rgba(190,130,220,0.18) 323deg,
             transparent     327deg,
             transparent     345deg,
-            rgba(210,145,180,0.06) 348deg,
+            rgba(220,155,190,0.20) 348deg,
             transparent     352deg,
             transparent     360deg
         );
-        filter: blur(8px);
-    }
-
-    /* 위쪽 빛 집중 마스크 */
-    .light-rays-wrap::after {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(ellipse 60% 50% at 50% 33%, transparent 0%, #0c0810 75%);
+        filter: blur(5px);
     }
 
     /* 상단 글로우 */
@@ -136,7 +128,7 @@ if st.session_state.page == 'main':
         transform: translateX(-50%);
         width: 80vw;
         height: 50vh;
-        background: radial-gradient(ellipse at 50% 0%, rgba(200,130,175,0.18) 0%, transparent 70%);
+        background: radial-gradient(ellipse at 50% 0%, rgba(210,140,180,0.30) 0%, transparent 70%);
         pointer-events: none;
         z-index: 0;
     }
