@@ -47,7 +47,7 @@ if st.session_state.page == 'main':
     st.button("앨범 나누기", on_click=to_album)
     st.button("MD 나누기", on_click=to_md_main)
     st.button("송장", on_click=to_invoice_main)
-    st.button("포토카드 갯수", on_click=to_photocard_main)
+    st.button("포토카드 수량", on_click=to_photocard_main)
     st.button("물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
