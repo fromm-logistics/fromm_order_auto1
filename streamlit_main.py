@@ -38,17 +38,99 @@ def to_logistics_simulator():
 
 # 1. 메인 메뉴 화면
 if st.session_state.page == 'main':
-    st.title("▶️ Fromm logistics team")
-    st.markdown(
-        '<h2 style="color:#1f77b4; font-size:28px; margin-bottom:5px;">'
-        '📋 MENU</h2>',
-        unsafe_allow_html=True
-    )
-    st.button("앨범 나누기", on_click=to_album)
-    st.button("MD 나누기", on_click=to_md_main)
-    st.button("송장", on_click=to_invoice_main)
-    st.button("포토카드 수량", on_click=to_photocard_main)
-    st.button("물류비 시뮬레이터", on_click=to_logistics_simulator)
+    st.markdown("""
+    <style>
+    /* ── 배경 그라디언트 ── */
+    .stApp {
+        background: linear-gradient(160deg, #0d1117 0%, #161b27 50%, #0d1117 100%);
+    }
+
+    /* ── 사이드바 숨기기 영역 제거용 ── */
+    [data-testid="stSidebar"] { display: none; }
+
+    /* ── 메인 컨테이너 중앙 정렬 ── */
+    .block-container {
+        max-width: 560px !important;
+        padding-top: 60px !important;
+    }
+
+    /* ── 헤더 타이틀 ── */
+    .main-title {
+        text-align: center;
+        padding: 0 0 36px 0;
+    }
+    .main-title .logo {
+        font-size: 3rem;
+        display: block;
+        margin-bottom: 8px;
+    }
+    .main-title h1 {
+        font-size: 1.9rem;
+        font-weight: 700;
+        color: #f0f4ff;
+        margin: 0;
+        letter-spacing: -0.5px;
+    }
+    .main-title p {
+        color: #6b7a99;
+        font-size: 0.9rem;
+        margin: 6px 0 0 0;
+    }
+
+    /* ── 섹션 라벨 ── */
+    .section-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: #4a90d9;
+        margin: 28px 0 10px 2px;
+    }
+
+    /* ── 버튼 카드 스타일 ── */
+    .stButton > button {
+        width: 100% !important;
+        background: rgba(255,255,255,0.04) !important;
+        color: #e8edf5 !important;
+        border: 1px solid rgba(255,255,255,0.09) !important;
+        border-radius: 14px !important;
+        padding: 18px 22px !important;
+        font-size: 1.05rem !important;
+        font-weight: 600 !important;
+        text-align: left !important;
+        transition: all 0.2s ease !important;
+        margin-bottom: 2px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3) !important;
+        letter-spacing: 0.2px !important;
+    }
+    .stButton > button:hover {
+        background: rgba(74, 144, 217, 0.12) !important;
+        border-color: rgba(74, 144, 217, 0.4) !important;
+        color: #ffffff !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 20px rgba(74, 144, 217, 0.15) !important;
+    }
+    .stButton > button:active {
+        transform: translateY(0px) !important;
+    }
+
+    /* ── 구분선 ── */
+    hr { border-color: rgba(255,255,255,0.07) !important; }
+    </style>
+
+    <div class="main-title">
+        <span class="logo">📦</span>
+        <h1>Fromm Logistics</h1>
+        <p>물류 자동화 도구 모음</p>
+    </div>
+    <div class="section-label">메뉴</div>
+    """, unsafe_allow_html=True)
+
+    st.button("📀  앨범 나누기", on_click=to_album)
+    st.button("🛍️  MD 나누기", on_click=to_md_main)
+    st.button("🧾  송장", on_click=to_invoice_main)
+    st.button("🃏  포토카드 수", on_click=to_photocard_main)
+    st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
 elif st.session_state.page == 'invoice_main':
