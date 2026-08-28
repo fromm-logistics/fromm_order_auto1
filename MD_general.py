@@ -305,6 +305,10 @@ def run_md_general():
         st.subheader("2️⃣ 가격 예측 및 카테고리 설정")
         def run_md_prediction():
             PRICE_TABLE_PATH = "가격테이블.xlsx"
+            @st.cache_data
+            def load_workbook_cached(file_bytes):
+                return pd.read_excel(io.BytesIO(file_bytes), sheet_name=None)
+
 
             xlsx_file = st.file_uploader("▶ Step1 결과물 업로드 (XLSX)", type=["xlsx"], key="xlsx_upload")
             if xlsx_file:
