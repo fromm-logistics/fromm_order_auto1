@@ -265,7 +265,7 @@ def run_md_general():
                     with cols[0]:
                         st.markdown(f"<div class='product-box'><div class='product-name'>{prod}</div>", unsafe_allow_html=True)
                         weight = st.number_input(
-                            label="",
+                            label="무게",  # 빈 문자열 대신 의미 있는 텍스트 입력
                             min_value=1,
                             value=saved_weights.get(prod, default_weight),
                             key=f"weight_{prod}",
