@@ -312,7 +312,7 @@ def run_md_general():
 
             xlsx_file = st.file_uploader("▶ Step1 결과물 업로드 (XLSX)", type=["xlsx"], key="xlsx_upload")
             if xlsx_file:
-                wb = pd.read_excel(xlsx_file, sheet_name=None)
+                wb = load_workbook_cached(xlsx_file.getvalue())
                 df_origin = wb['원본']
                 df_domestic = wb['국내']
                 df_stock = wb['재고_값']
