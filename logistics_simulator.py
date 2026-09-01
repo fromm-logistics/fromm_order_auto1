@@ -1,15 +1,13 @@
 # logistics_simulator.py
 import streamlit as st
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
 
 SPREADSHEET_ID = "1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg"
 SHEET_NAME = "원본 업로드"
 
 # 열 이름 (CSV 헤더 기준)
 CANCEL_COL = '배송진행여부'   # AC열
-KEEP_COLS_ORDERED = ['주문일시', '주문번호', '재고명', '수량', '국가코드']  # B, C, V, W, M
+KEEP_COLS_ORDERED = ['주문일시', '주문번호', '재고명', '수량', '상품무게', '국가코드']  # B, C, V, W, Z, M
 # 열 이름이 없을 때 사용할 0-based 인덱스
 KEEP_IDX = {
     '주문일시': 1,   # B
@@ -17,11 +15,14 @@ KEEP_IDX = {
     '국가코드': 12,  # M
     '재고명':   21,  # V
     '수량':     22,  # W
+    '상품무게': 25,  # Z
 }
 CANCEL_IDX = 28  # AC
 
 
 def _get_gspread_client():
+    import gspread
+    from google.oauth2.service_account import Credentials
     creds = Credentials.from_service_account_info(
         st.secrets["gcp_service_account"],
         scopes=[
@@ -83,7 +84,7 @@ def run_logistics_simulator():
         elif len(df.columns) > idx:
             selected.append((df.columns[idx], col_name))
 
-    if len(selected) < 5:
+    if len(selected) < 6:
         st.error(f"❌ 필요한 열을 찾을 수 없습니다. 현재 열 목록: {list(df.columns)}")
         return
 
@@ -95,8 +96,8 @@ def run_logistics_simulator():
     # 사용자 지정 순서로 재배열
     df = df[[c for c in KEEP_COLS_ORDERED if c in df.columns]]
 
-    # ── STEP 3.5: 중복 행 합치기 (수량 합산) ─────────────
-    group_cols = [c for c in ['주문일시', '주문번호', '재고명', '국가코드'] if c in df.columns]
+    # ── STEP 3.5: 중복 행 합치기 (수량 합산, 상품무게 유지) ──
+    group_cols = [c for c in ['주문일시', '주문번호', '재고명', '국가코드', '상품무게'] if c in df.columns]
     if group_cols and '수량' in df.columns:
         df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0)
         before = len(df)
@@ -152,7 +153,7 @@ def run_logistics_simulator():
                 values = df_upload.fillna("").values.tolist()
                 existing_rows = ws.row_count
                 if existing_rows > 1:
-                    ws.batch_clear([f"A2:E{existing_rows}"])
+                    ws.batch_clear([f"A2:F{existing_rows}"])
 
                 # 데이터 업로드 (2행부터)
                 ws.update(range_name="A2", values=values)
@@ -160,11 +161,9 @@ def run_logistics_simulator():
                 st.success(f"✅ {len(df)}행 업로드 완료!")
 
             except KeyError:
-                st.error(
-                    "❌ Streamlit secrets에 'gcp_service_account' 키가 없습니다.\n"
-                    "아래 설정 방법을 참고해주세요."
-                )
-            except gspread.exceptions.SpreadsheetNotFound:
-                st.error("❌ 스프레드시트를 찾을 수 없습니다. 서비스 계정에 공유 권한이 있는지 확인하세요.")
+                st.error("❌ Streamlit secrets에 'gcp_service_account' 키가 없습니다.")
             except Exception as e:
-                st.error(f"❌ 업로드 실패: {e}")
+                if "SpreadsheetNotFound" in type(e).__name__:
+                    st.error("❌ 스프레드시트를 찾을 수 없습니다. 서비스 계정에 공유 권한이 있는지 확인하세요.")
+                else:
+                    st.error(f"❌ 업로드 실패: {e}")
