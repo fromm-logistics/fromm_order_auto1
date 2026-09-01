@@ -98,7 +98,7 @@ def run_logistics_simulator():
     df = df[[c for c in KEEP_COLS_ORDERED if c in df.columns]]
 
     # ── STEP 3.5: 중복 행 합치기 (수량 합산, 상품무게 유지) ──
-    group_cols = [c for c in ['주문일시', '주문번호', '재고명', '국가코드', '상품무게'] if c in df.columns]
+    group_cols = [c for c in ['주문일시', '주문번호', '재고명', '상품무게', '결제통화', '국가코드'] if c in df.columns]
     if group_cols and '수량' in df.columns:
         df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0)
         before = len(df)
