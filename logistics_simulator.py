@@ -7,7 +7,7 @@ SHEET_NAME = "원본 업로드"
 
 # 열 이름 (CSV 헤더 기준)
 CANCEL_COL = '배송진행여부'   # AC열
-KEEP_COLS_ORDERED = ['주문일시', '주문번호', '재고명', '수량', '상품무게', '국가코드']  # B, C, V, W, Z, M
+KEEP_COLS_ORDERED = ['주문일시', '주문번호', '재고명', '수량', '상품무게', '결제통화', '국가코드']  # B, C, V, W, Z, V, M
 # 열 이름이 없을 때 사용할 0-based 인덱스
 KEEP_IDX = {
     '주문일시': 1,   # B
@@ -16,6 +16,7 @@ KEEP_IDX = {
     '재고명':   21,  # V
     '수량':     22,  # W
     '상품무게': 25,  # Z
+    '결제통화': 21,  # V (열 이름으로 우선 매칭)
 }
 CANCEL_IDX = 28  # AC
 
@@ -84,7 +85,7 @@ def run_logistics_simulator():
         elif len(df.columns) > idx:
             selected.append((df.columns[idx], col_name))
 
-    if len(selected) < 6:
+    if len(selected) < 7:
         st.error(f"❌ 필요한 열을 찾을 수 없습니다. 현재 열 목록: {list(df.columns)}")
         return
 
@@ -153,7 +154,7 @@ def run_logistics_simulator():
                 values = df_upload.fillna("").values.tolist()
                 existing_rows = ws.row_count
                 if existing_rows > 1:
-                    ws.batch_clear([f"A2:F{existing_rows}"])
+                    ws.batch_clear([f"A2:G{existing_rows}"])
 
                 # 데이터 업로드 (2행부터)
                 ws.update(range_name="A2", values=values)
