@@ -134,11 +134,25 @@ def run_logistics_simulator():
     st.write("---")
     st.markdown("### 2단계: Google Sheets '원본 업로드' 시트에 붙여넣기")
 
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)
     with col1:
         upload_clicked = st.button("📤 Google Sheets에 업로드", use_container_width=True)
     with col2:
         st.link_button("🔗 시트 열기", "https://docs.google.com/spreadsheets/d/1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg/edit?gid=700911321#gid=700911321", use_container_width=True)
+    with col3:
+        if '주문번호' in df.columns:
+            import io
+            order_df = pd.DataFrame(df['주문번호'].dropna().astype(str).tolist())
+            buf = io.BytesIO()
+            order_df.to_excel(buf, index=False, header=False)
+            buf.seek(0)
+            st.download_button(
+                "📥 주문번호 파일 다운",
+                data=buf,
+                file_name="주문번호.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+            )
 
     if upload_clicked:
         with st.spinner("업로드 중..."):
