@@ -21,6 +21,37 @@ KEEP_IDX = {
 CANCEL_IDX = 28  # AC
 
 
+@st.dialog("📋 물류비 시뮬레이터 사용 방법")
+def _show_usage():
+    st.markdown("""
+**1.** 주문 파일 다운로드
+
+**2.** Streamlit → 물류비 시뮬레이터 → CSV 파일 업로드
+
+**3.** 재고명 중 삭제할 재고명 선택
+
+**4.** 'Google Sheets에 업로드' 버튼 실행
+- 4-1. '시트 열기': 시트 바로가기
+
+**5.** '주문번호 파일 다운' 버튼
+
+**6.** OpenVPN Connect에서 Wonderwall VPN 접속
+
+**7.** `G:\\공유 드라이브\\Logistics Team\\물류비\\주문번호_주문조회\\주문조회\\주문조회.exe`
+- 7-1. 파일 업로드
+- 7-2. 조회 실행 → 파일로 저장
+- 7-3. 시트 반영하기: '물류비 예측' → '배송청구비' 시트에 반영
+
+**8.** 시트 '원본 업로드'에서 센터별 물류비 확인
+- 8-1. J2에서 '앨범', 'MD', '포토카드' 선택
+- 8-2. J2 = '앨범' → L1:M4 수정
+- 8-3. J2 = 'MD' → L6:M9 수정
+  - 8-3-1. 'MD_배송비' C열 수정
+  - 8-3-2. 'MD 작업비' B열 수정
+- 8-4. J2 = '포토카드' → 수정사항 없음
+""")
+
+
 def _get_gspread_client():
     import gspread
     from google.oauth2.service_account import Credentials
@@ -40,7 +71,13 @@ def run_logistics_simulator():
         on_click=lambda: st.session_state.update(page="main"),
         key="back_to_main_from_logistics",
     )
-    st.title("📊 물류비 시뮬레이터")
+    col_title, col_help = st.columns([5, 1])
+    with col_title:
+        st.title("📊 물류비 시뮬레이터")
+    with col_help:
+        st.write("")
+        if st.button("사용 방법 보기", use_container_width=True):
+            _show_usage()
 
     # ── STEP 1: CSV 업로드 ──────────────────────────────
     st.markdown("### 1단계: CSV 파일 업로드")
