@@ -66,7 +66,7 @@ def _get_gspread_client():
 
 
 def run_logistics_simulator():
-    col_back, col_spacer, col_help = st.columns([2, 5, 2])
+    col_back, col_spacer, col_help = st.columns([3, 12, 2])
     with col_back:
         st.button(
             "⬅️ 메인 메뉴로 돌아가기",
