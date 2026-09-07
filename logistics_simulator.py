@@ -66,14 +66,17 @@ def _get_gspread_client():
 
 
 def run_logistics_simulator():
-    st.button(
-        "⬅️ 메인 메뉴로 돌아가기",
-        on_click=lambda: st.session_state.update(page="main"),
-        key="back_to_main_from_logistics",
-    )
+    col_back, col_spacer, col_help = st.columns([2, 5, 2])
+    with col_back:
+        st.button(
+            "⬅️ 메인 메뉴로 돌아가기",
+            on_click=lambda: st.session_state.update(page="main"),
+            key="back_to_main_from_logistics",
+        )
+    with col_help:
+        if st.button("📖 사용 방법 보기", use_container_width=True):
+            _show_usage()
     st.title("📊 물류비 시뮬레이터")
-    if st.button("📖 사용 방법 보기"):
-        _show_usage()
 
     # ── STEP 1: CSV 업로드 ──────────────────────────────
     st.markdown("### 1단계: CSV 파일 업로드")
