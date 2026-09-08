@@ -329,12 +329,14 @@ target_products={
     "[이태빈 팬미팅 예약판매 MD] 엽서세트" : 300,
     "[이태빈 팬미팅 예약판매 MD] 패브릭 포스터" : 750,
     "[이태빈 팬미팅 예약판매 MD] 포토북" : 750,
-    "[박재범 2025 SERENADES & BODY ROLLS] 10CM DOLL" : 300,
+    "[박재범 2025 SERENADES & BODY ROLLS] 10CM DOLL" : 299,
+    "[박재범 2025 SERENADES & BODY ROLLS] 10CM DOLL 포토카드 (1종)" : 1,
     "[박재범 2025 SERENADES & BODY ROLLS] CHECK SHIRT" : 750,
     "[박재범 2025 SERENADES & BODY ROLLS] MINI BAG" : 1000,
     "[박재범 2025 SERENADES & BODY ROLLS] REMEDY MAKING BOOK" : 1000,
     "[박재범 2025 SERENADES & BODY ROLLS] REUSABLE BAG" : 750,
-    "[박재범 2025 SERENADES & BODY ROLLS] RUG" : 3000,
+    "[박재범 2025 SERENADES & BODY ROLLS] RUG" : 2999,
+    "[박재범 2025 SERENADES & BODY ROLLS] RUG 포토카드 (1종)" : 1,
     "[박재범 2025 SERENADES & BODY ROLLS] SMART TOK" : 300,
     "[박재범 2025 SERENADES & BODY ROLLS] WIND BREAKER JACKET" : 1500,
     "[프로미스나인 팝업_GLOW] 랜덤 트레이딩 카드" : 100,
@@ -356,6 +358,14 @@ target_products={
     "[박재범 2025 SERENADES & BODY ROLLS] OFFICIAL LIGHT STICK" : 3750,
     "[김재중_SPECIAL MD] 베이비스 팔찌" : 749,
     "[김재중_SPECIAL MD] 베이비스 팔찌 포토카드 (1종)" : 1
+    "[김재중 콘서트MD_THE WAVE] 백팩 키링" : 210,
+    "[김재중 콘서트MD_THE WAVE] 손거울" : 300,
+    "[김재중 콘서트MD_THE WAVE] 슬로건" : 500,
+    "[김재중 콘서트MD_THE WAVE] 아크릴 스탠드" : 375,
+    "[김재중 콘서트MD_THE WAVE] 키캡 키링" : 75,
+    "[김재중 콘서트MD_THE WAVE] 트레이딩 카드 세트" : 5,
+    "[김재중 콘서트MD_THE WAVE] 포토카드 홀더" : 75,
+    "[김재중 콘서트MD_THE WAVE] 핸드폰 스트랩" : 75
 }
 box_limit = 15000  # 기본 박스 최대 용량
 
