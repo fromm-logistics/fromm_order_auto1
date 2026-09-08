@@ -353,7 +353,9 @@ target_products={
     "[프로미스나인 팝업_GLOW] 키링 (JIWON ver.)" : 300,
     "[프로미스나인 팝업_GLOW] 키링 (NAGYUNG ver.)" : 300,
     "[프로미스나인 팝업_GLOW] 피크업 피규어 (5종)" : 500,
-    "[박재범 2025 SERENADES & BODY ROLLS] OFFICIAL LIGHT STICK" : 3750
+    "[박재범 2025 SERENADES & BODY ROLLS] OFFICIAL LIGHT STICK" : 3750,
+    "[김재중_SPECIAL MD] 베이비스 팔찌" : 749,
+    "[김재중_SPECIAL MD] 베이비스 팔찌 포토카드 (1종)" : 1
 }
 box_limit = 15000  # 기본 박스 최대 용량
 
