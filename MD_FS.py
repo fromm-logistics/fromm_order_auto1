@@ -357,7 +357,7 @@ target_products={
     "[프로미스나인 팝업_GLOW] 피크업 피규어 (5종)" : 500,
     "[박재범 2025 SERENADES & BODY ROLLS] OFFICIAL LIGHT STICK" : 3750,
     "[김재중_SPECIAL MD] 베이비스 팔찌" : 749,
-    "[김재중_SPECIAL MD] 베이비스 팔찌 포토카드 (1종)" : 1
+    "[김재중_SPECIAL MD] 베이비스 팔찌 포토카드 (1종)" : 1,
     "[김재중 콘서트MD_THE WAVE] 백팩 키링" : 210,
     "[김재중 콘서트MD_THE WAVE] 손거울" : 300,
     "[김재중 콘서트MD_THE WAVE] 슬로건" : 500,
