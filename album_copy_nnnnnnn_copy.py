@@ -351,6 +351,7 @@ def run_album():
                 df_int.loc[jp_mask, "주"].fillna('').astype(str)
             )
             df_int.loc[jp_mask, ['상세주소', '주']] = ''
+            df_int['도시'] = df_int['도시'].astype(str)
             df_int.loc[jp_mask, ['도시']] = '.'
             df_int.loc[df_int["국가명"] == "Japan", "국가명"] = "."
 
