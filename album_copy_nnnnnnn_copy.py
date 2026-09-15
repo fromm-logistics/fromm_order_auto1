@@ -350,10 +350,10 @@ def run_album():
                 df_int.loc[jp_mask, "도시"].fillna('').astype(str) + ' ' +
                 df_int.loc[jp_mask, "주"].fillna('').astype(str)
             )
-            df_int.loc[jp_mask, ['상세주소', '주']] = ''
-            df_int['도시'] = df_int['도시'].astype(str)
-            df_int.loc[jp_mask, ['도시']] = '.'
-            df_int.loc[df_int["국가명"] == "Japan", "국가명"] = "."
+            df_int['상세주소'] = df_int['상세주소'].astype(str)
+            df_int['주'] = df_int['주'].astype(str)
+            df_int.loc[jp_mask, '상세주소'] = ''
+            df_int.loc[jp_mask, '주'] = ''
 
             def generate_item_code(row, index):
                 if pd.isna(row['id']) or row['id'] == '' or row['id'] == 'nan':
