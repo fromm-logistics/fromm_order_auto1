@@ -253,6 +253,10 @@ def run_md_ss():
     # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
     _sheet_w = load_weights()
     effective_tp = {**target_products, **_sheet_w}
+    if _sheet_w:
+        st.caption(f"📊 구글 시트에서 **{len(_sheet_w)}개** 무게 로드됨")
+    else:
+        st.warning("⚠️ 구글 시트 무게 로드 실패 — 코드 내 기본값 사용 중")
 
     uploaded = st.file_uploader("▶ SS 전용 CSV 업로드", type="csv", key="SS_csv")
     if uploaded:
