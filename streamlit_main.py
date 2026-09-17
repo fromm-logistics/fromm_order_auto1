@@ -39,240 +39,157 @@ def to_logistics_simulator():
 # 1. 메인 메뉴 화면
 if st.session_state.page == 'main':
     st.markdown("""
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;600&display=swap');
 
-    /* ── 배경 ── */
     .stApp {
-        background: #0c0810;
+        background: #0f1117;
         font-family: 'Noto Sans KR', 'Inter', sans-serif;
     }
 
-    /* ── Light Rays 애니메이션 ── */
-    @keyframes rotateRays {
-        from { transform: translate(-50%, 0) rotate(0deg); }
-        to   { transform: translate(-50%, 0) rotate(360deg); }
-    }
-    @keyframes pulseFade {
-        0%, 100% { opacity: 0.85; }
-        50%       { opacity: 1.0; }
-    }
-
-    .light-rays-wrap {
-        position: fixed;
-        top: -60vh;
-        left: 50%;
-        transform: translate(-50%, 0);
-        width: 300vw;
-        height: 300vh;
-        pointer-events: none;
-        z-index: 0;
-        animation: rotateRays 40s linear infinite, pulseFade 8s ease-in-out infinite;
-        background: conic-gradient(
-            from 0deg at 50% 50%,
-            transparent       0deg,
-            rgba(220,155,190,0.22)  4deg,
-            transparent       8deg,
-            transparent      22deg,
-            rgba(190,130,220,0.18) 26deg,
-            transparent      30deg,
-            transparent      44deg,
-            rgba(220,155,190,0.25) 48deg,
-            transparent      52deg,
-            transparent      70deg,
-            rgba(190,130,220,0.18) 73deg,
-            transparent      77deg,
-            transparent      95deg,
-            rgba(220,155,190,0.22) 98deg,
-            transparent     102deg,
-            transparent     118deg,
-            rgba(190,130,220,0.18) 121deg,
-            transparent     125deg,
-            transparent     145deg,
-            rgba(220,155,190,0.20) 148deg,
-            transparent     152deg,
-            transparent     170deg,
-            rgba(190,130,220,0.15) 173deg,
-            transparent     177deg,
-            transparent     195deg,
-            rgba(220,155,190,0.20) 198deg,
-            transparent     202deg,
-            transparent     220deg,
-            rgba(190,130,220,0.18) 223deg,
-            transparent     227deg,
-            transparent     246deg,
-            rgba(220,155,190,0.22) 249deg,
-            transparent     253deg,
-            transparent     270deg,
-            rgba(190,130,220,0.15) 273deg,
-            transparent     277deg,
-            transparent     295deg,
-            rgba(220,155,190,0.20) 298deg,
-            transparent     302deg,
-            transparent     320deg,
-            rgba(190,130,220,0.18) 323deg,
-            transparent     327deg,
-            transparent     345deg,
-            rgba(220,155,190,0.20) 348deg,
-            transparent     352deg,
-            transparent     360deg
-        );
-        filter: blur(5px);
-    }
-
-    .top-glow {
-        position: fixed;
-        top: -10vh;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 80vw;
-        height: 50vh;
-        background: radial-gradient(ellipse at 50% 0%, rgba(210,140,180,0.30) 0%, transparent 70%);
-        pointer-events: none !important;
-        z-index: 0;
-    }
-
-    /* ── 클릭 보장 ── */
     .stButton, .stButton > button {
         position: relative !important;
         z-index: 10 !important;
         pointer-events: auto !important;
     }
 
-    /* ── 레이아웃 ── */
     .block-container {
-        max-width: 560px !important;
-        padding-top: 56px !important;
+        max-width: 640px !important;
+        padding-top: 0 !important;
         position: relative;
         z-index: 1;
     }
 
-    /* ── 헤더 ── */
-    .fromm-header {
-        text-align: center;
-        padding-bottom: 48px;
-    }
-    .fromm-wordmark {
-        font-size: 2.4rem;
-        font-weight: 700;
-        letter-spacing: 10px;
-        text-transform: uppercase;
-        background: linear-gradient(135deg, #f0c8d8 0%, #d4a0c0 45%, #b888c8 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        display: block;
-        margin-bottom: 8px;
-    }
-    .fromm-sub {
-        font-size: 0.72rem;
-        letter-spacing: 4px;
-        text-transform: uppercase;
-        color: rgba(255,255,255,0.22);
-        margin: 0;
-    }
-    .fromm-divider {
-        width: 40px;
-        height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(210,140,180,0.6), transparent);
-        margin: 20px auto 0;
-    }
-
-    /* ── 섹션 그룹 ── */
-    .menu-section {
-        margin-bottom: 8px;
-    }
-    .section-label {
+    /* 상단 헤더바 */
+    .fromm-topbar {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin: 0 0 8px 0;
-        padding: 0 2px;
+        padding: 28px 0 28px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+        margin-bottom: 36px;
     }
-    .section-label-text {
-        font-size: 0.62rem;
+    .fromm-logo-mark {
+        width: 30px;
+        height: 30px;
+        background: linear-gradient(135deg, #d4a0c0, #b888c8);
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        flex-shrink: 0;
+    }
+    .fromm-logo-mark i { color: #fff; font-size: 15px; }
+    .fromm-wordmark {
+        font-size: 13px;
         font-weight: 600;
         letter-spacing: 3px;
         text-transform: uppercase;
-        color: rgba(200,140,175,0.5);
-        white-space: nowrap;
+        color: #e0e0e0;
+        margin-right: 10px;
     }
-    .section-label-line {
-        flex: 1;
-        height: 1px;
-        background: linear-gradient(90deg, rgba(200,140,175,0.2), transparent);
+    .fromm-vdivider {
+        width: 1px;
+        height: 14px;
+        background: rgba(255,255,255,0.15);
+        margin-right: 10px;
     }
-    .section-gap {
-        height: 20px;
+    .fromm-system {
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.28);
     }
 
-    /* ── 버튼 ── */
+    /* 섹션 */
+    .fromm-section-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 8px;
+    }
+    .fromm-section-label {
+        font-size: 10px;
+        font-weight: 600;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: rgba(180,130,160,0.6);
+        white-space: nowrap;
+    }
+    .fromm-section-line {
+        flex: 1;
+        height: 1px;
+        background: rgba(255,255,255,0.06);
+    }
+    .fromm-section-gap { height: 20px; }
+
+    /* 버튼 공통 */
     .stButton > button {
         width: 100% !important;
         background: rgba(255,255,255,0.03) !important;
         color: rgba(255,255,255,0.80) !important;
-        border: 1px solid rgba(210,140,175,0.12) !important;
+        border: 1px solid rgba(255,255,255,0.07) !important;
         border-radius: 10px !important;
-        padding: 15px 20px !important;
-        font-size: 0.93rem !important;
+        padding: 14px 16px !important;
+        font-size: 13px !important;
         font-weight: 500 !important;
-        font-family: 'Noto Sans KR', sans-serif !important;
+        font-family: 'Noto Sans KR', 'Inter', sans-serif !important;
         text-align: left !important;
-        transition: all 0.2s ease !important;
+        transition: background 0.18s, border-color 0.18s !important;
         margin-bottom: 4px !important;
-        backdrop-filter: blur(8px) !important;
         letter-spacing: 0.2px !important;
     }
     .stButton > button:hover {
-        background: rgba(210,130,170,0.08) !important;
-        border-color: rgba(210,130,170,0.38) !important;
+        background: rgba(200,130,170,0.07) !important;
+        border-color: rgba(200,130,170,0.28) !important;
         color: #ffffff !important;
-        transform: translateX(5px) !important;
-        box-shadow: 0 3px 20px rgba(180,100,150,0.10) !important;
     }
     .stButton > button:active {
-        transform: translateX(2px) !important;
+        transform: scale(0.99) !important;
     }
     </style>
 
-    <div class="light-rays-wrap"></div>
-    <div class="top-glow"></div>
-
-    <div class="fromm-header">
-        <span class="fromm-wordmark">fromm</span>
-        <p class="fromm-sub">Logistics System</p>
-        <div class="fromm-divider"></div>
+    <div class="fromm-topbar">
+        <div class="fromm-logo-mark"><i class="ti ti-package" aria-hidden="true"></i></div>
+        <span class="fromm-wordmark">FROMM</span>
+        <span class="fromm-vdivider"></span>
+        <span class="fromm-system">Logistics System</span>
     </div>
 
-    <div class="section-label">
-        <span class="section-label-text">주문서</span>
-        <span class="section-label-line"></span>
+    <div class="fromm-section-header">
+        <span class="fromm-section-label">주문서</span>
+        <span class="fromm-section-line"></span>
     </div>
     """, unsafe_allow_html=True)
 
-    st.button("📀  앨범 나누기", on_click=to_album)
-    st.button("🛍️  MD 나누기", on_click=to_md_main)
-    st.button("🃏  포토카드 개수", on_click=to_photocard_main)
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.button("📀  앨범 나누기", on_click=to_album, use_container_width=True)
+    with col2:
+        st.button("🛍️  MD 나누기", on_click=to_md_main, use_container_width=True)
+    with col3:
+        st.button("🃏  포토카드 개수", on_click=to_photocard_main, use_container_width=True)
 
     st.markdown("""
-    <div class="section-gap"></div>
-    <div class="section-label">
-        <span class="section-label-text">송장 업로드</span>
-        <span class="section-label-line"></span>
+    <div class="fromm-section-gap"></div>
+    <div class="fromm-section-header">
+        <span class="fromm-section-label">송장 업로드</span>
+        <span class="fromm-section-line"></span>
     </div>
     """, unsafe_allow_html=True)
 
-    st.button("🧾  송장", on_click=to_invoice_main)
+    st.button("🧾  송장", on_click=to_invoice_main, use_container_width=True)
 
     st.markdown("""
-    <div class="section-gap"></div>
-    <div class="section-label">
-        <span class="section-label-text">물류비</span>
-        <span class="section-label-line"></span>
+    <div class="fromm-section-gap"></div>
+    <div class="fromm-section-header">
+        <span class="fromm-section-label">물류비</span>
+        <span class="fromm-section-line"></span>
     </div>
     """, unsafe_allow_html=True)
 
-    st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator)
+    st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator, use_container_width=True)
 
 # 2. 송장
 elif st.session_state.page == 'invoice_main':
