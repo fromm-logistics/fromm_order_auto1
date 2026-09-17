@@ -5,7 +5,6 @@ from md_main import run_md_main, run_md_fs_page, run_md_ss_page, run_md_general_
 from invoice_main import run_invoice_main
 from photocard_main import run_photocard_main
 from logistics_simulator import run_logistics_simulator
-from weight_manager import run_weight_manager
 
 # 페이지 상태 초기화 (메인에서만!)
 if 'page' not in st.session_state:
@@ -129,6 +128,3 @@ elif st.session_state.page == 'photocard':
 
 elif st.session_state.page == 'logistics_simulator':
     run_logistics_simulator()
-
-elif st.session_state.page == 'weight_manager':
-    run_weight_manager()
