@@ -5,9 +5,11 @@ import io, re, random
 import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+from weight_db import load_weights  # ← 구글 시트 무게 DB
+
 # ───────────────────────────────────────────────────
 # 1) 유저가 수정·확장 가능한 영역:
-#    – 기본 target_products(재고명→무게 매핑)
+#    – 기본 target_products(재고명→무게 매핑) — 시트에 없는 경우 폴백
 #    – box_limit(박스 최대 용량)
 # ───────────────────────────────────────────────────
 target_products={
@@ -208,10 +210,6 @@ target_products={
     "[BTOB 캐릭터 팝업] 20cm doll_랑꼬미" : 3750,
     "[BTOB 캐릭터 팝업] Photocard Holder_아토" : 100,
     "[BTOB 캐릭터 팝업] Scrunchie_쁘멍" : 100,
-    "[BTOB 캐릭터 팝업] Laundry Soap" : 1500,
-    "[BTOB 캐릭터 팝업] Hand Soap" : 1500,
-    "[BTOB 캐릭터 팝업] Laundry Formula" : 3000,
-    "[BTOB 캐릭터 팝업] Fabric Formula" : 3000,
     "[BTOB 캐릭터 팝업] Pillow Mist : Powdery Iris" : 1500,
     "[BTOB 캐릭터 팝업] Acrylic Shaker Keyring" : 100,
     "[BTOB 캐릭터 팝업] Sticky Notes_쁘멍" : 100,
@@ -223,9 +221,7 @@ target_products={
     "[BTOB 캐릭터 팝업] Photocard Holder_쁘멍" : 100,
     "[BTOB 캐릭터 팝업] 20cm doll_아토" : 3750,
     "[BTOB 캐릭터 팝업] 20cm doll_햇냥이" : 3750,
-    "[비투비 팬콘 멜림픽 MD] POUCH CROSS BAG" : 1000,
-    "[비투비 팬콘 멜림픽 MD] POSTCARD SET _ 임현식" : 500,
-    "[비투비 팬콘 멜림픽 MD] POSTCARD SET _ 서은광" : 500,
+    "[BTOB 캐릭터 팝업] POUCH CROSS BAG" : 1000,
     "[BTOB 캐릭터 팝업] Scrunchie_랑꼬미" : 100,
     "[BTOB 캐릭터 팝업] Scrunchie_아토" : 100,
     "[BTOB 캐릭터 팝업] Scrunchie_햇냥이" : 100,
@@ -358,21 +354,17 @@ target_products={
     "[박재범 2025 SERENADES & BODY ROLLS] OFFICIAL LIGHT STICK" : 3750,
     "[김재중_SPECIAL MD] 베이비스 팔찌" : 749,
     "[김재중_SPECIAL MD] 베이비스 팔찌 포토카드 (1종)" : 1,
-    "[김재중 콘서트MD_THE WAVE] 백팩 키링" : 210,
-    "[김재중 콘서트MD_THE WAVE] 손거울" : 300,
-    "[김재중 콘서트MD_THE WAVE] 슬로건" : 500,
-    "[김재중 콘서트MD_THE WAVE] 아크릴 스탠드" : 375,
-    "[김재중 콘서트MD_THE WAVE] 키캡 키링" : 75,
-    "[김재중 콘서트MD_THE WAVE] 트레이딩 카드 세트" : 5,
-    "[김재중 콘서트MD_THE WAVE] 포토카드 홀더" : 75,
-    "[김재중 콘서트MD_THE WAVE] 핸드폰 스트랩" : 75
+    "[김재중 콘서트MD_THE WAVE] 백팩 키링" : 210,
+    "[김재중 콘서트MD_THE WAVE] 손거울" : 300,
+    "[김재중 콘서트MD_THE WAVE] 슬로건" : 500,
+    "[김재중 콘서트MD_THE WAVE] 아크릴 스탠드" : 375,
+    "[김재중 콘서트MD_THE WAVE] 키캡 키링" : 75,
+    "[김재중 콘서트MD_THE WAVE] 트레이딩 카드 세트" : 5,
+    "[김재중 콘서트MD_THE WAVE] 포토카드 홀더" : 75,
+    "[김재중 콘서트MD_THE WAVE] 핸드폰 스트랩" : 75,
 }
 box_limit = 15000  # 기본 박스 최대 용량
 
-# ───────────────────────────────────────────────────
-# 제외할 재고명 목록 (처리에서 제외할 상품명을 아래에 추가)
-# 예시: exclude_products = ['상품A', '상품B']
-# ───────────────────────────────────────────────────
 exclude_products = [
     # '상품명 예시',
 ]
@@ -382,6 +374,11 @@ def run_md_fs():
               on_click=lambda: st.session_state.update(page="md_main"),
               key="back_to_md_main_from_fs")
     st.title("📋 FS 나누기")
+
+    # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
+    _sheet_w = load_weights()
+    effective_tp = {**target_products, **_sheet_w}
+
     uploaded = st.file_uploader("▶ FS 전용 CSV 업로드", type="csv", key="fs_csv")
     if uploaded:
         df = pd.read_csv(uploaded, dtype={'우편번호': str, '전화번호': str})
@@ -398,18 +395,20 @@ def run_md_fs():
         st.success(f"CSV 업로드 완료: {df.shape[0]}행")
     else:
         df = st.session_state.get('fs_df')
+
     missing = []
     if df is not None:
-        missing = sorted(set(df['재고명'].dropna()) - set(target_products))
+        missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
             st.warning("타겟에 정의되지 않은 재고명 발견:")
-        for name in missing:
-            st.code(f'"{name}" : ', language="python")
+            for name in missing:
+                st.code(f'"{name}" : ', language="python")
         if st.button("검증"):
             st.session_state['fs_verified'] = True
         else:
-            st.success("모든 재고명이 target_products에 포함됩니다.")
+            st.success("모든 재고명이 effective_tp에 포함됩니다.")
             st.session_state['fs_verified'] = True
+
     if st.session_state.get('fs_verified') and missing:
         st.markdown("### 누락된 재고명의 무게를 입력해주세요")
         custom = st.session_state.get('fs_custom_weights', {})
@@ -418,13 +417,15 @@ def run_md_fs():
             if w:
                 custom[prod] = w
         st.session_state['fs_custom_weights'] = custom
+
     if st.session_state.get('fs_verified') and df is not None and st.button("✅ 실행"):
-        merged_tp = {**target_products, **st.session_state.get('fs_custom_weights', {})}
+        merged_tp = {**effective_tp, **st.session_state.get('fs_custom_weights', {})}
         buf_all, buf_dom, buf_int = _process_fs(df, merged_tp, box_limit)
         st.session_state['fs_buf_all'] = buf_all.getvalue()
         st.session_state['fs_buf_dom'] = buf_dom.getvalue()
         st.session_state['fs_buf_int'] = buf_int.getvalue()
         st.success("FS 처리 완료!")
+
     if 'fs_buf_all' in st.session_state:
         today = datetime.datetime.now().strftime("%y%m%d")
         st.download_button("▶ 원본 시트 다운로드", st.session_state['fs_buf_all'],
@@ -433,15 +434,15 @@ def run_md_fs():
                            file_name=f"FS_{today}_국내.xlsx")
         st.download_button("▶ 해외 시트 다운로드", st.session_state['fs_buf_int'],
                            file_name=f"FS_{today}_해외.xlsx")
+
+
 # ───────────────────────────────────────────────────
 # 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
 def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
-    # [수정 추가] 안전한 연산을 위해 사전에 수량 컬럼을 정형(int) 타입으로 강제 변환합니다.
     df = df.copy()
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
 
-    # 1) 주문 분할
     def assign_order_numbers(group):
         total_w, suffix, out = 0, 1, []
         for _, row in group.iterrows():
@@ -459,11 +460,12 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
                 total_w += can * weight
                 qty -= can
         return out
+
     rows = []
     for _, grp in df.groupby('주문번호'):
         rows += assign_order_numbers(grp)
     res = pd.DataFrame(rows)
-    # 2) 금액 처리
+
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
     res.loc[m, '결제통화'] = 'USD'
@@ -474,23 +476,18 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
     res.loc[res['국가명'] == "Japan", '국가명'] = "."
     dom = res[res['국가코드'] == 'KR'].copy()
     intl = res[res['국가코드'] != 'KR'].copy()
-    # ⭐ [조건 반영] 해외 주문 건에 대한 국가코드별 희망배송사 자동 지정 로직 추가
+
     intl['희망배송사'] = intl['국가코드'].map(
-        # lambda c: 'sfexpress' if c == 'CN' else ('sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems'))
-        # lambda c: 'ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems')
         lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems'))
     )
-    # 3) 특전 처리
-    fromis_keywords = [
-        "FROM OUR 20S",
-        "프로미스나인"
-    ]
+
+    fromis_keywords = ["FROM OUR 20S", "프로미스나인"]
     def generate_bonus_rows(src):
         src = src.copy()
         src['원주문번호'] = src['주문번호'].str[:20]
         bonus = []
         mask = src['재고명'].apply(lambda x: any(k in str(x) for k in fromis_keywords))
-        for oid, g in src[mask].groupby('원주num번호' if '원주num번호' in src.columns else '원주문번호'): # 오타 대응 보정
+        for oid, g in src[mask].groupby('원주문번호'):
             currency = g['결제통화'].iloc[0]
             total = g['실결제금액'].sum()
             ratio = 50000 if currency == "KRW" else 50
@@ -508,16 +505,14 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
                 r['결제통화'] = "USD"
                 bonus.append(r)
         return pd.DataFrame(bonus, columns=src.columns)
-    # dom = pd.concat([dom, generate_bonus_rows(dom)], ignore_index=True)
-    # intl = pd.concat([intl, generate_bonus_rows(intl)], ignore_index=True)
-    # 4) 전화번호
+
     def fmt(p):
         s = re.sub(r"\D", "", str(p))
         if len(s) == 11:
             return f"{s[:3]}-{s[3:7]}-{s[7:]}"
         return s
     dom['전화번호'] = dom['전화번호'].apply(fmt)
-    # 5) Excel 저장
+
     buf_all = io.BytesIO()
     buf_dom = io.BytesIO()
     buf_int = io.BytesIO()
