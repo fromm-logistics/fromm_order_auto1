@@ -444,8 +444,40 @@ def run_md_fs():
         missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
             st.error(f"🚫 실행 불가 — 무게 시트에 없는 재고 **{len(missing)}개** 발견\n\n우측 버튼으로 시트에 추가 후 🔄 새로고침하세요:")
-            for name in missing:
-                st.code(name)
+            _items = ""
+            for _i, _n in enumerate(missing, 1):
+                _js = _n.replace('\\', '\\\\').replace("'", "\\'")
+                _items += (
+                    f'<div class="mi"><span class="mn">{_i}.</span>'
+                    f'<span class="mt">{_n}</span>'
+                    f'<button class="cb" onclick="cp(\'{_js}\',this)">복사</button></div>'
+                )
+            components.html(
+                '<style>'
+                'body{margin:0;padding:4px 0;background:#0f1117;font-family:sans-serif;}'
+                '.mi{display:flex;align-items:center;gap:10px;padding:10px 14px;'
+                'background:#1c1640;border:1px solid #4a3080;border-radius:8px;margin:4px 0;}'
+                '.mn{color:#a78bfa;font-size:12px;font-weight:700;min-width:22px;'
+                'text-align:right;flex-shrink:0;}'
+                '.mt{flex:1;font-family:monospace;font-size:13px;color:#e2d9f3;'
+                'word-break:break-all;line-height:1.4;}'
+                '.cb{background:rgba(251,72,102,0.12);border:1px solid rgba(251,72,102,0.45);'
+                'color:#fb4866;border-radius:6px;padding:5px 12px;font-size:11px;font-weight:700;'
+                'cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all 0.15s;}'
+                '.cb:hover{background:rgba(251,72,102,0.3);}'
+                '.cb.ok{background:rgba(34,197,94,0.15);border-color:rgba(34,197,94,0.45);color:#22c55e;}'
+                '</style>'
+                '<script>'
+                'function cp(t,b){'
+                'navigator.clipboard.writeText(t).then(function(){'
+                'b.textContent="✅ 복사됨";b.classList.add("ok");'
+                'setTimeout(function(){b.textContent="복사";b.classList.remove("ok");},1500);'
+                '});}'
+                '</script>'
+                + _items,
+                height=len(missing) * 56 + 16,
+                scrolling=False,
+            )
         else:
             st.success("모든 재고명이 무게 DB에 포함됩니다.")
 
