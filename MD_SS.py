@@ -246,7 +246,7 @@ exclude_products = ['[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포�
 
 def _reset_ss():
     load_weights.clear()
-    for k in ['SS_df', 'SS_verified', 'SS_buf_all', 'SS_buf_dom', 'SS_buf_int', 'SS_custom_weights']:
+    for k in ['SS_df', 'SS_buf_all', 'SS_buf_dom', 'SS_buf_int']:
         st.session_state.pop(k, None)
 
 def run_md_ss():
@@ -284,31 +284,17 @@ def run_md_ss():
     else:
         df = st.session_state.get('SS_df', None)
 
-    missing = []
     if df is not None:
         missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
-            st.warning("타겟에 정의되지 않은 재고명 발견:")
+            st.warning(f"무게 시트에 없는 재고 {len(missing)}개 — 시트에 추가 후 🔄 새로고침하세요:")
             for name in missing:
-                st.code(f'"{name}" : ', language="python")
-            st.info("위 항목을 target_products에 추가하거나 아래에서 무게를 입력하세요.")
-            if st.button("검증"):
-                st.session_state['SS_verified'] = True
+                st.code(name)
         else:
-            st.success("모든 재고명이 effective_tp에 포함됩니다.")
-            st.session_state['SS_verified'] = True
+            st.success("모든 재고명이 무게 DB에 포함됩니다.")
 
-    if st.session_state.get('SS_verified') and missing:
-        st.markdown("### 누락된 재고명의 무게를 입력해주세요")
-        custom = st.session_state.get('SS_custom_weights', {})
-        for prod in missing:
-            w = st.number_input(f"{prod} ▶ 무게입력", min_value=1, key=f"w_{prod}")
-            if w:
-                custom[prod] = w
-        st.session_state['SS_custom_weights'] = custom
-
-    if st.session_state.get('SS_verified') and df is not None and st.button("✅ 실행"):
-        merged_tp = {**effective_tp, **st.session_state.get('SS_custom_weights', {})}
+    if df is not None and st.button("✅ 실행"):
+        merged_tp = effective_tp
         buf_all, buf_dom, buf_int = _process_ss(df, merged_tp, box_limit)
         st.session_state['SS_buf_all'] = buf_all.getvalue()
         st.session_state['SS_buf_dom'] = buf_dom.getvalue()
