@@ -18,6 +18,8 @@ def run_md_main():
     st.button("FS 나누기", on_click=lambda: st.session_state.update(page="md_fs"))
     st.button("SS 나누기", on_click=lambda: st.session_state.update(page="md_ss"))
     st.button("General 나누기", on_click=lambda: st.session_state.update(page="md_general"))
+    st.button("⚖️ 재고 무게 관리", on_click=lambda: st.session_state.update(page="weight_manager"))
+
     st.markdown("<hr>", unsafe_allow_html=True)
     st.markdown(
         '<h2 style="color:#888888; font-size:28px; margin-bottom:5px;">'
@@ -30,12 +32,12 @@ def run_md_main():
 
 def run_md_fs_page():
     """FS1 나누기 페이지 호출"""
-    run_md_fs()  # MD_FS 모듈의 실행 함수
+    run_md_fs()
 
 def run_md_ss_page():
     """SS 나누기 페이지 호출"""
-    run_md_ss()  # MD_SS 모듈의 실행 함수
+    run_md_ss()
 
 def run_md_general_page():
     """General 나누기 페이지 호출"""
-    run_md_general()  # MD_general 모듈의 실행 함수
+    run_md_general()
