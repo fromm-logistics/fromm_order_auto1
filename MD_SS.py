@@ -251,13 +251,42 @@ def _reset_ss():
 
 def run_md_ss():
     inject_floating_weight_btn(show_refresh=True)
-    col_back, col_refresh = st.columns([8, 2])
-    with col_back:
-        st.button("◀ MD 창으로 돌아가기",
-                  on_click=lambda: st.session_state.update(page="md_main"),
-                  key="back_to_md_main_from_FS")
-    with col_refresh:
-        st.button("🔄 새로고침", on_click=_reset_ss, key="ss_refresh", use_container_width=True)
+
+    # 뒤로가기 버튼 (표시)
+    st.button("◀ MD 창으로 돌아가기",
+              on_click=lambda: st.session_state.update(page="md_main"),
+              key="back_to_md_main_from_FS")
+
+    # 새로고침 버튼 — CSS로 숨김, 플로팅 버튼 JS가 이 버튼을 클릭함
+    st.markdown(
+        '<style>.element-container:has(#ss-refresh-anchor)+'
+        '.element-container{display:none!important}</style>'
+        '<div id="ss-refresh-anchor"></div>',
+        unsafe_allow_html=True,
+    )
+    st.button("🔄 새로고침", on_click=_reset_ss, key="ss_refresh")
+
+    # 플로팅 새로고침 → 숨겨진 Streamlit 버튼을 JS로 클릭
+    import streamlit.components.v1 as components
+    components.html(
+        '<script>'
+        '(function wire(){'
+        'var doc=window.parent.document;'
+        'var trigger=doc.getElementById("floating-refresh-trigger");'
+        'if(trigger&&!trigger._w){'
+        'trigger._w=true;'
+        'trigger.addEventListener("click",function(){'
+        'var btns=doc.querySelectorAll("button");'
+        'for(var i=0;i<btns.length;i++){'
+        'var t=btns[i].innerText||btns[i].textContent||"";'
+        'if(t.indexOf("\\uc0c8\\ub85c\\uace0\\uce68")!==-1){btns[i].click();return;}'
+        '}});'
+        '}else if(!trigger){setTimeout(wire,200);}'
+        '})()'
+        '</script>',
+        height=0,
+        scrolling=False,
+    )
     st.title("📋 SS 나누기")
 
     # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
