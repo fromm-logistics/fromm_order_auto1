@@ -135,7 +135,7 @@ def inject_floating_weight_btn(show_refresh: bool = False):
     sheet_item_html = (
         '<div class="floating-weight-btn">'
         f'<a href="{sheet_url}" target="_blank">'
-        '<span class="fw-icon">⚖️</span>'
+        '<span class="fw-icon">➡️</span>'
         '<span class="fw-label">재고 무게<br>추가/수정</span>'
         '</a></div>'
     )
@@ -144,7 +144,7 @@ def inject_floating_weight_btn(show_refresh: bool = False):
     # HTML div는 절대 빈 줄 없이 한 줄로 렌더링
     st.markdown(
         f"<style>"
-        f".floating-weight-col{{position:fixed;right:80px;top:50%;"
+        f".floating-weight-col{{position:fixed;right:400px;top:50%;"
         f"transform:translateY(-50%);z-index:9999;"
         f"display:flex;flex-direction:column;align-items:center;gap:8px;}}"
         f"{refresh_css_block}"
