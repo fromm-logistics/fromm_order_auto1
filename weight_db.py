@@ -97,22 +97,23 @@ def save_weights_bulk(weights: dict) -> bool:
         return False
 
 
-def inject_floating_weight_btn(show_refresh: bool = False, refresh_url: str = ""):
+def inject_floating_weight_btn(show_refresh: bool = False):
     """MD 관련 모든 페이지 우측 중앙에 구글 시트 플로팅 버튼 삽입.
     show_refresh=True 이면 새로고침 버튼을 맨 위에 함께 표시.
+    플로팅 새로고침은 onclick JS로 페이지 내 실제 Streamlit 새로고침 버튼을 클릭함.
     """
     sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
 
     # CSS: <style> 블록 내부는 Markdown 코드블록 영향 없음
     refresh_css_block = ""
     refresh_item_html = ""
-    if show_refresh and refresh_url:
+    if show_refresh:
         refresh_css_block = (
             ".floating-refresh-btn{"
             "display:flex;flex-direction:column;align-items:center;"
             "justify-content:center;gap:4px;width:72px;padding:10px 8px;"
             "background:rgba(255,255,255,0.10);border-radius:14px;"
-            "text-decoration:none!important;box-shadow:0 2px 10px rgba(0,0,0,0.25);"
+            "cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,0.25);"
             "transition:background 0.15s,box-shadow 0.15s;}"
             ".floating-refresh-btn:hover{"
             "background:rgba(255,255,255,0.22);box-shadow:0 4px 16px rgba(0,0,0,0.35);}"
@@ -121,12 +122,22 @@ def inject_floating_weight_btn(show_refresh: bool = False, refresh_url: str = ""
             "font-size:10px;font-weight:600;color:#fff!important;"
             "text-align:center;line-height:1.3;word-break:keep-all;}"
         )
-        # HTML은 한 줄로 — 빈 줄 + 4칸 들여쓰기 조합이 Markdown 코드블록을 유발하므로
+        # onclick: 페이지 내 '새로고침' 텍스트를 가진 버튼을 JS로 클릭
+        # <a href> 대신 div+onclick 사용 — Streamlit에서 <a>는 항상 새 탭으로 열림
+        js = (
+            "(function(){"
+            "var btns=document.querySelectorAll('button');"
+            "for(var i=0;i<btns.length;i++){"
+            "var t=btns[i].innerText||btns[i].textContent||'';"
+            "if(t.indexOf('\\uc0c8\\ub85c\\uace0\\uce68')!==-1)"  # 새로고침
+            "{btns[i].click();return;}"
+            "}})()"
+        )
         refresh_item_html = (
-            f'<a href="{refresh_url}" class="floating-refresh-btn">'
+            f'<div class="floating-refresh-btn" onclick="{js}">'
             '<span class="fr-icon">🔄</span>'
             '<span class="fr-label">새로고침</span>'
-            '</a>'
+            '</div>'
         )
 
     sheet_item_html = (
