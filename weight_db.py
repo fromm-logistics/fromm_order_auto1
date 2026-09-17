@@ -97,14 +97,51 @@ def save_weights_bulk(weights: dict) -> bool:
         return False
 
 
-def inject_floating_weight_btn():
-    """MD 관련 모든 페이지 우측 중앙에 구글 시트 플로팅 버튼 삽입."""
+def inject_floating_weight_btn(show_refresh: bool = False, refresh_url: str = ""):
+    """MD 관련 모든 페이지 우측 중앙에 구글 시트 플로팅 버튼 삽입.
+    show_refresh=True 이면 새로고침 버튼을 맨 위에 함께 표시.
+    """
     sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
+
+    refresh_html = ""
+    refresh_css = ""
+    if show_refresh and refresh_url:
+        refresh_css = """
+.floating-refresh-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 72px;
+    padding: 10px 8px;
+    background: rgba(255,255,255,0.10);
+    border-radius: 14px;
+    text-decoration: none !important;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
+    transition: background 0.15s, box-shadow 0.15s;
+}
+.floating-refresh-btn:hover {
+    background: rgba(255,255,255,0.22);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+.floating-refresh-btn .fr-icon { font-size: 20px; line-height: 1; }
+.floating-refresh-btn .fr-label {
+    font-size: 10px; font-weight: 600; color: #fff !important;
+    text-align: center; line-height: 1.3; word-break: keep-all;
+}
+"""
+        refresh_html = f"""
+    <a href="{refresh_url}" class="floating-refresh-btn">
+        <span class="fr-icon">🔄</span>
+        <span class="fr-label">새로고침</span>
+    </a>"""
+
     st.markdown(f"""
 <style>
 .floating-weight-col {{
     position: fixed;
-    right: 80px;
+    right: 320px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 9999;
@@ -113,6 +150,7 @@ def inject_floating_weight_btn():
     align-items: center;
     gap: 8px;
 }}
+{refresh_css}
 .floating-weight-btn a {{
     display: flex;
     flex-direction: column;
@@ -145,49 +183,13 @@ def inject_floating_weight_btn():
 }}
 </style>
 <div class="floating-weight-col">
+{refresh_html}
     <div class="floating-weight-btn">
         <a href="{sheet_url}" target="_blank">
             <span class="fw-icon">➡️</span>
             <span class="fw-label">재고 무게<br>추가/수정</span>
         </a>
     </div>
-</div>
-""", unsafe_allow_html=True)
-
-
-def inject_missing_warning(missing: list):
-    """무게 시트에 없는 재고가 있을 때 플로팅 버튼 바로 위에 경고 배지 표시."""
-    if not missing:
-        return
-    count = len(missing)
-    st.markdown(f"""
-<style>
-.floating-missing-badge {{
-    position: fixed;
-    right: 80px;
-    top: 50%;
-    transform: translateY(calc(-50% - 90px));
-    z-index: 10000;
-    width: 72px;
-    background: #FF3B30;
-    border-radius: 12px;
-    padding: 8px 6px;
-    text-align: center;
-    color: #fff;
-    font-size: 10px;
-    font-weight: 700;
-    line-height: 1.4;
-    word-break: keep-all;
-    box-shadow: 0 2px 12px rgba(255,59,48,0.55);
-    animation: fm-pulse 1.6s ease-in-out infinite;
-}}
-@keyframes fm-pulse {{
-    0%, 100% {{ box-shadow: 0 2px 12px rgba(255,59,48,0.55); }}
-    50%  {{ box-shadow: 0 4px 22px rgba(255,59,48,0.9); }}
-}}
-</style>
-<div class="floating-missing-badge">
-    ⚠️<br>{count}개<br>미등록
 </div>
 """, unsafe_allow_html=True)
 
