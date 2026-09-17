@@ -5,7 +5,7 @@ import io, re, random
 import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
-from weight_db import load_weights  # ← 구글 시트 무게 DB
+from weight_db import load_weights, inject_floating_weight_btn  # ← 구글 시트 무게 DB
 
 # ───────────────────────────────────────────────────
 # 1) 유저가 수정·확장 가능한 영역:
@@ -370,6 +370,7 @@ exclude_products = [
 ]
 
 def run_md_fs():
+    inject_floating_weight_btn()
     st.button("◀ MD 창으로 돌아가기",
               on_click=lambda: st.session_state.update(page="md_main"),
               key="back_to_md_main_from_fs")
