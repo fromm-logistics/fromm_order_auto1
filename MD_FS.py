@@ -5,7 +5,7 @@ import io, re, random
 import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
-from weight_db import load_weights, inject_floating_weight_btn  # ← 구글 시트 무게 DB
+from weight_db import load_weights, inject_floating_weight_btn, inject_missing_warning  # ← 구글 시트 무게 DB
 
 # ───────────────────────────────────────────────────
 # 1) 유저가 수정·확장 가능한 영역:
@@ -410,16 +410,18 @@ def run_md_fs():
     else:
         df = st.session_state.get('fs_df')
 
+    missing = []
     if df is not None:
         missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
-            st.warning(f"무게 시트에 없는 재고 {len(missing)}개 — 시트에 추가 후 🔄 새로고침하세요:")
+            inject_missing_warning(missing)
+            st.error(f"🚫 실행 불가 — 무게 시트에 없는 재고 **{len(missing)}개** 발견\n\n우측 버튼으로 시트에 추가 후 🔄 새로고침하세요:")
             for name in missing:
                 st.code(name)
         else:
             st.success("모든 재고명이 무게 DB에 포함됩니다.")
 
-    if df is not None and st.button("✅ 실행"):
+    if df is not None and st.button("✅ 실행", disabled=bool(missing)):
         merged_tp = effective_tp
         buf_all, buf_dom, buf_int = _process_fs(df, merged_tp, box_limit)
         st.session_state['fs_buf_all'] = buf_all.getvalue()
