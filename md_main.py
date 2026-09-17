@@ -5,7 +5,7 @@ from MD_SS import run_md_ss
 from MD_general import run_md_general
 from weight_db import WEIGHT_SPREADSHEET_ID
 
-SHEET_URL = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
+SHEET_URL = f"https://docs.google.com/spreadsheets/d/1bSv3pKhjUeShcaxPV68QAavKpxtA5nmyE2YgZABlTb8/"
 
 
 def run_md_main():
