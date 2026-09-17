@@ -2,7 +2,7 @@
 # 재고명 → 무게(g) 영구 저장소 (Google Sheets "재고무게DB" 시트 사용)
 import streamlit as st
 
-WEIGHT_SPREADSHEET_ID = "1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg"
+WEIGHT_SPREADSHEET_ID = "1bSv3pKhjUeShcaxPV68QAavKpxtA5nmyE2YgZABlTb8"
 WEIGHT_SHEET_NAME = "재고무게DB"
 
 
