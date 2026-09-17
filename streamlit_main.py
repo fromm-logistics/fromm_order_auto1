@@ -40,12 +40,12 @@ def to_logistics_simulator():
 if st.session_state.page == 'main':
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
 
     /* ── 배경 ── */
     .stApp {
         background: #0c0810;
-        font-family: 'Noto Sans KR', sans-serif;
+        font-family: 'Noto Sans KR', 'Inter', sans-serif;
     }
 
     /* ── Light Rays 애니메이션 ── */
@@ -120,7 +120,6 @@ if st.session_state.page == 'main':
         filter: blur(5px);
     }
 
-    /* 상단 글로우 */
     .top-glow {
         position: fixed;
         top: -10vh;
@@ -129,14 +128,21 @@ if st.session_state.page == 'main':
         width: 80vw;
         height: 50vh;
         background: radial-gradient(ellipse at 50% 0%, rgba(210,140,180,0.30) 0%, transparent 70%);
-        pointer-events: none;
+        pointer-events: none !important;
         z-index: 0;
+    }
+
+    /* ── 클릭 보장 ── */
+    .stButton, .stButton > button {
+        position: relative !important;
+        z-index: 10 !important;
+        pointer-events: auto !important;
     }
 
     /* ── 레이아웃 ── */
     .block-container {
-        max-width: 520px !important;
-        padding-top: 64px !important;
+        max-width: 560px !important;
+        padding-top: 56px !important;
         position: relative;
         z-index: 1;
     }
@@ -144,67 +150,85 @@ if st.session_state.page == 'main':
     /* ── 헤더 ── */
     .fromm-header {
         text-align: center;
-        padding-bottom: 44px;
+        padding-bottom: 48px;
     }
     .fromm-wordmark {
-        font-size: 2.6rem;
+        font-size: 2.4rem;
         font-weight: 700;
-        letter-spacing: 8px;
+        letter-spacing: 10px;
         text-transform: uppercase;
         background: linear-gradient(135deg, #f0c8d8 0%, #d4a0c0 45%, #b888c8 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         display: block;
-        margin-bottom: 6px;
+        margin-bottom: 8px;
     }
     .fromm-sub {
-        font-size: 0.75rem;
-        letter-spacing: 3.5px;
+        font-size: 0.72rem;
+        letter-spacing: 4px;
         text-transform: uppercase;
-        color: rgba(255,255,255,0.28);
+        color: rgba(255,255,255,0.22);
         margin: 0;
     }
     .fromm-divider {
-        width: 36px;
+        width: 40px;
         height: 1px;
-        background: linear-gradient(90deg, transparent, rgba(210,140,180,0.7), transparent);
-        margin: 18px auto 0;
+        background: linear-gradient(90deg, transparent, rgba(210,140,180,0.6), transparent);
+        margin: 20px auto 0;
     }
 
-    /* ── 섹션 라벨 ── */
-    .fromm-section {
-        font-size: 0.67rem;
+    /* ── 섹션 그룹 ── */
+    .menu-section {
+        margin-bottom: 8px;
+    }
+    .section-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 8px 0;
+        padding: 0 2px;
+    }
+    .section-label-text {
+        font-size: 0.62rem;
         font-weight: 600;
         letter-spacing: 3px;
         text-transform: uppercase;
-        color: rgba(200,140,175,0.45);
-        margin: 0 0 10px 2px;
+        color: rgba(200,140,175,0.5);
+        white-space: nowrap;
+    }
+    .section-label-line {
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, rgba(200,140,175,0.2), transparent);
+    }
+    .section-gap {
+        height: 20px;
     }
 
     /* ── 버튼 ── */
     .stButton > button {
         width: 100% !important;
         background: rgba(255,255,255,0.03) !important;
-        color: rgba(255,255,255,0.82) !important;
-        border: 1px solid rgba(210,140,175,0.15) !important;
-        border-radius: 12px !important;
-        padding: 17px 22px !important;
-        font-size: 0.96rem !important;
+        color: rgba(255,255,255,0.80) !important;
+        border: 1px solid rgba(210,140,175,0.12) !important;
+        border-radius: 10px !important;
+        padding: 15px 20px !important;
+        font-size: 0.93rem !important;
         font-weight: 500 !important;
         font-family: 'Noto Sans KR', sans-serif !important;
         text-align: left !important;
-        transition: all 0.22s ease !important;
-        margin-bottom: 6px !important;
+        transition: all 0.2s ease !important;
+        margin-bottom: 4px !important;
         backdrop-filter: blur(8px) !important;
-        letter-spacing: 0.3px !important;
+        letter-spacing: 0.2px !important;
     }
     .stButton > button:hover {
-        background: rgba(210,130,170,0.09) !important;
-        border-color: rgba(210,130,170,0.45) !important;
+        background: rgba(210,130,170,0.08) !important;
+        border-color: rgba(210,130,170,0.38) !important;
         color: #ffffff !important;
-        transform: translateX(6px) !important;
-        box-shadow: 0 4px 24px rgba(180,100,150,0.12) !important;
+        transform: translateX(5px) !important;
+        box-shadow: 0 3px 20px rgba(180,100,150,0.10) !important;
     }
     .stButton > button:active {
         transform: translateX(2px) !important;
@@ -219,13 +243,35 @@ if st.session_state.page == 'main':
         <p class="fromm-sub">Logistics System</p>
         <div class="fromm-divider"></div>
     </div>
-    <div class="fromm-section">메뉴</div>
+
+    <div class="section-label">
+        <span class="section-label-text">주문서</span>
+        <span class="section-label-line"></span>
+    </div>
     """, unsafe_allow_html=True)
 
     st.button("📀  앨범 나누기", on_click=to_album)
     st.button("🛍️  MD 나누기", on_click=to_md_main)
-    st.button("🧾  송장", on_click=to_invoice_main)
     st.button("🃏  포토카드 개수", on_click=to_photocard_main)
+
+    st.markdown("""
+    <div class="section-gap"></div>
+    <div class="section-label">
+        <span class="section-label-text">송장 업로드</span>
+        <span class="section-label-line"></span>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.button("🧾  송장", on_click=to_invoice_main)
+
+    st.markdown("""
+    <div class="section-gap"></div>
+    <div class="section-label">
+        <span class="section-label-text">물류비</span>
+        <span class="section-label-line"></span>
+    </div>
+    """, unsafe_allow_html=True)
+
     st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator)
 
 # 2. 송장
