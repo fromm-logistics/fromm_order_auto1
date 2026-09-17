@@ -250,16 +250,14 @@ def _reset_ss():
         st.session_state.pop(k, None)
 
 def run_md_ss():
-    # URL 파라미터로 새로고침 요청 처리 (플로팅 새로고침 버튼 클릭 시)
-    if st.query_params.get("ss_refresh"):
-        _reset_ss()
-        st.query_params.pop("ss_refresh", None)
-        st.rerun()
-
-    inject_floating_weight_btn(show_refresh=True, refresh_url="?page=md_ss&ss_refresh=1")
-    st.button("◀ MD 창으로 돌아가기",
-              on_click=lambda: st.session_state.update(page="md_main"),
-              key="back_to_md_main_from_FS")
+    inject_floating_weight_btn(show_refresh=True)
+    col_back, col_refresh = st.columns([8, 2])
+    with col_back:
+        st.button("◀ MD 창으로 돌아가기",
+                  on_click=lambda: st.session_state.update(page="md_main"),
+                  key="back_to_md_main_from_FS")
+    with col_refresh:
+        st.button("🔄 새로고침", on_click=_reset_ss, key="ss_refresh", use_container_width=True)
     st.title("📋 SS 나누기")
 
     # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
