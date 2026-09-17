@@ -25,6 +25,10 @@ def _get_or_create_sheet():
     try:
         return sh.worksheet(WEIGHT_SHEET_NAME)
     except Exception:
+        # 탭이 없으면: 시트가 1개뿐이면 첫 번째 탭 사용, 아니면 새로 생성
+        all_ws = sh.worksheets()
+        if len(all_ws) == 1:
+            return all_ws[0]
         ws = sh.add_worksheet(title=WEIGHT_SHEET_NAME, rows=2000, cols=2)
         ws.update("A1:B1", [["재고명", "무게(g)"]])
         return ws
@@ -32,15 +36,28 @@ def _get_or_create_sheet():
 
 @st.cache_data(ttl=120)
 def load_weights() -> dict:
-    """Google Sheets에서 재고무게 DB 로드. {재고명: 무게(g)}"""
+    """Google Sheets에서 재고무게 DB 로드. {재고명: 무게(g)}
+    컬럼명 '무게(g)' 또는 '무게' 모두 지원.
+    """
     try:
         ws = _get_or_create_sheet()
         records = ws.get_all_records()
-        return {
-            r["재고명"]: int(r["무게(g)"])
-            for r in records
-            if r.get("재고명") and str(r.get("무게(g)", "")).isdigit()
-        }
+        if not records:
+            return {}
+        # 첫 번째 레코드에서 무게 컬럼명 자동 감지
+        sample = records[0]
+        weight_col = "무게(g)" if "무게(g)" in sample else "무게"
+        result = {}
+        for r in records:
+            name = r.get("재고명", "")
+            raw_w = r.get(weight_col, "")
+            if not name:
+                continue
+            try:
+                result[name] = int(float(str(raw_w)))
+            except (ValueError, TypeError):
+                pass
+        return result
     except Exception:
         return {}
 
