@@ -244,11 +244,20 @@ box_limit = 15000  # 기본 박스 최대 용량
 exclude_products = ['[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포토카드']
 
 
+def _reset_ss():
+    load_weights.clear()
+    for k in ['SS_df', 'SS_verified', 'SS_buf_all', 'SS_buf_dom', 'SS_buf_int', 'SS_custom_weights']:
+        st.session_state.pop(k, None)
+
 def run_md_ss():
     inject_floating_weight_btn()
-    st.button("◀ MD 창으로 돌아가기",
-              on_click=lambda: st.session_state.update(page="md_main"),
-              key="back_to_md_main_from_FS")
+    col_back, col_refresh = st.columns([8, 2])
+    with col_back:
+        st.button("◀ MD 창으로 돌아가기",
+                  on_click=lambda: st.session_state.update(page="md_main"),
+                  key="back_to_md_main_from_FS")
+    with col_refresh:
+        st.button("🔄 새로고침", on_click=_reset_ss, key="ss_refresh", use_container_width=True)
     st.title("📋 SS 나누기")
 
     # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
