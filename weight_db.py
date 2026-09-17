@@ -103,95 +103,67 @@ def inject_floating_weight_btn(show_refresh: bool = False, refresh_url: str = ""
     """
     sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
 
-    refresh_html = ""
-    refresh_css = ""
+    # CSS: <style> 블록 내부는 Markdown 코드블록 영향 없음
+    refresh_css_block = ""
+    refresh_item_html = ""
     if show_refresh and refresh_url:
-        refresh_css = """
-.floating-refresh-btn {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-    width: 72px;
-    padding: 10px 8px;
-    background: rgba(255,255,255,0.10);
-    border-radius: 14px;
-    text-decoration: none !important;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.25);
-    transition: background 0.15s, box-shadow 0.15s;
-}
-.floating-refresh-btn:hover {
-    background: rgba(255,255,255,0.22);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.35);
-}
-.floating-refresh-btn .fr-icon { font-size: 20px; line-height: 1; }
-.floating-refresh-btn .fr-label {
-    font-size: 10px; font-weight: 600; color: #fff !important;
-    text-align: center; line-height: 1.3; word-break: keep-all;
-}
-"""
-        refresh_html = f"""
-    <a href="{refresh_url}" class="floating-refresh-btn">
-        <span class="fr-icon">🔄</span>
-        <span class="fr-label">새로고침</span>
-    </a>"""
+        refresh_css_block = (
+            ".floating-refresh-btn{"
+            "display:flex;flex-direction:column;align-items:center;"
+            "justify-content:center;gap:4px;width:72px;padding:10px 8px;"
+            "background:rgba(255,255,255,0.10);border-radius:14px;"
+            "text-decoration:none!important;box-shadow:0 2px 10px rgba(0,0,0,0.25);"
+            "transition:background 0.15s,box-shadow 0.15s;}"
+            ".floating-refresh-btn:hover{"
+            "background:rgba(255,255,255,0.22);box-shadow:0 4px 16px rgba(0,0,0,0.35);}"
+            ".floating-refresh-btn .fr-icon{font-size:20px;line-height:1;}"
+            ".floating-refresh-btn .fr-label{"
+            "font-size:10px;font-weight:600;color:#fff!important;"
+            "text-align:center;line-height:1.3;word-break:keep-all;}"
+        )
+        # HTML은 한 줄로 — 빈 줄 + 4칸 들여쓰기 조합이 Markdown 코드블록을 유발하므로
+        refresh_item_html = (
+            f'<a href="{refresh_url}" class="floating-refresh-btn">'
+            '<span class="fr-icon">🔄</span>'
+            '<span class="fr-label">새로고침</span>'
+            '</a>'
+        )
 
-    st.markdown(f"""
-<style>
-.floating-weight-col {{
-    position: fixed;
-    right: 320px;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-}}
-{refresh_css}
-.floating-weight-btn a {{
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    width: 72px;
-    padding: 14px 8px;
-    background: linear-gradient(160deg, #FB4866 0%, #FB7E48 100%);
-    border-radius: 16px;
-    text-decoration: none !important;
-    box-shadow: 0 4px 20px rgba(251,72,102,0.45);
-    transition: transform 0.15s, box-shadow 0.15s;
-}}
-.floating-weight-btn a:hover {{
-    transform: scale(1.06);
-    box-shadow: 0 6px 28px rgba(251,72,102,0.65);
-}}
-.floating-weight-btn .fw-icon {{
-    font-size: 22px;
-    line-height: 1;
-}}
-.floating-weight-btn .fw-label {{
-    font-size: 10px;
-    font-weight: 600;
-    color: #fff !important;
-    text-align: center;
-    line-height: 1.4;
-    word-break: keep-all;
-}}
-</style>
-<div class="floating-weight-col">
-{refresh_html}
-    <div class="floating-weight-btn">
-        <a href="{sheet_url}" target="_blank">
-            <span class="fw-icon">➡️</span>
-            <span class="fw-label">재고 무게<br>추가/수정</span>
-        </a>
-    </div>
-</div>
-""", unsafe_allow_html=True)
+    sheet_item_html = (
+        '<div class="floating-weight-btn">'
+        f'<a href="{sheet_url}" target="_blank">'
+        '<span class="fw-icon">⚖️</span>'
+        '<span class="fw-label">재고 무게<br>추가/수정</span>'
+        '</a></div>'
+    )
+
+    # CSS는 멀티라인 OK (style 블록은 HTML 블록으로 통째 처리됨)
+    # HTML div는 절대 빈 줄 없이 한 줄로 렌더링
+    st.markdown(
+        f"<style>"
+        f".floating-weight-col{{position:fixed;right:80px;top:50%;"
+        f"transform:translateY(-50%);z-index:9999;"
+        f"display:flex;flex-direction:column;align-items:center;gap:8px;}}"
+        f"{refresh_css_block}"
+        f".floating-weight-btn a{{display:flex;flex-direction:column;"
+        f"align-items:center;justify-content:center;gap:6px;width:72px;"
+        f"padding:14px 8px;"
+        f"background:linear-gradient(160deg,#FB4866 0%,#FB7E48 100%);"
+        f"border-radius:16px;text-decoration:none!important;"
+        f"box-shadow:0 4px 20px rgba(251,72,102,0.45);"
+        f"transition:transform 0.15s,box-shadow 0.15s;}}"
+        f".floating-weight-btn a:hover{{transform:scale(1.06);"
+        f"box-shadow:0 6px 28px rgba(251,72,102,0.65);}}"
+        f".floating-weight-btn .fw-icon{{font-size:22px;line-height:1;}}"
+        f".floating-weight-btn .fw-label{{font-size:10px;font-weight:600;"
+        f"color:#fff!important;text-align:center;line-height:1.4;word-break:keep-all;}}"
+        f"</style>"
+        f'<div class="floating-weight-col">'
+        f"{refresh_item_html}"
+        f"{sheet_item_html}"
+        f"</div>",
+        unsafe_allow_html=True,
+    )
 
 
 def delete_weight(name: str) -> bool:
