@@ -102,12 +102,16 @@ def inject_floating_weight_btn():
     sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
     st.markdown(f"""
 <style>
-.floating-weight-btn {{
+.floating-weight-col {{
     position: fixed;
-    right: 320px;
+    right: 80px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
 }}
 .floating-weight-btn a {{
     display: flex;
@@ -140,11 +144,50 @@ def inject_floating_weight_btn():
     word-break: keep-all;
 }}
 </style>
-<div class="floating-weight-btn">
-    <a href="{sheet_url}" target="_blank">
-        <span class="fw-icon">➡️</span>
-        <span class="fw-label">재고 무게<br>추가/수정</span>
-    </a>
+<div class="floating-weight-col">
+    <div class="floating-weight-btn">
+        <a href="{sheet_url}" target="_blank">
+            <span class="fw-icon">➡️</span>
+            <span class="fw-label">재고 무게<br>추가/수정</span>
+        </a>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+
+def inject_missing_warning(missing: list):
+    """무게 시트에 없는 재고가 있을 때 플로팅 버튼 바로 위에 경고 배지 표시."""
+    if not missing:
+        return
+    count = len(missing)
+    st.markdown(f"""
+<style>
+.floating-missing-badge {{
+    position: fixed;
+    right: 80px;
+    top: 50%;
+    transform: translateY(calc(-50% - 90px));
+    z-index: 10000;
+    width: 72px;
+    background: #FF3B30;
+    border-radius: 12px;
+    padding: 8px 6px;
+    text-align: center;
+    color: #fff;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1.4;
+    word-break: keep-all;
+    box-shadow: 0 2px 12px rgba(255,59,48,0.55);
+    animation: fm-pulse 1.6s ease-in-out infinite;
+}}
+@keyframes fm-pulse {{
+    0%, 100% {{ box-shadow: 0 2px 12px rgba(255,59,48,0.55); }}
+    50%  {{ box-shadow: 0 4px 22px rgba(255,59,48,0.9); }}
+}}
+</style>
+<div class="floating-missing-badge">
+    ⚠️<br>{count}개<br>미등록
 </div>
 """, unsafe_allow_html=True)
 
