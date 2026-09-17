@@ -104,7 +104,7 @@ def inject_floating_weight_btn():
 <style>
 .floating-weight-btn {{
     position: fixed;
-    right: 160px;
+    right: 320px;
     top: 50%;
     transform: translateY(-50%);
     z-index: 9999;
