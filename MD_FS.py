@@ -371,7 +371,7 @@ exclude_products = [
 
 def _reset_fs():
     load_weights.clear()
-    for k in ['fs_df', 'fs_verified', 'fs_buf_all', 'fs_buf_dom', 'fs_buf_int', 'fs_custom_weights']:
+    for k in ['fs_df', 'fs_buf_all', 'fs_buf_dom', 'fs_buf_int']:
         st.session_state.pop(k, None)
 
 def run_md_fs():
@@ -410,30 +410,17 @@ def run_md_fs():
     else:
         df = st.session_state.get('fs_df')
 
-    missing = []
     if df is not None:
         missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
-            st.warning("타겟에 정의되지 않은 재고명 발견:")
+            st.warning(f"무게 시트에 없는 재고 {len(missing)}개 — 시트에 추가 후 🔄 새로고침하세요:")
             for name in missing:
-                st.code(f'"{name}" : ', language="python")
-        if st.button("검증"):
-            st.session_state['fs_verified'] = True
+                st.code(name)
         else:
-            st.success("모든 재고명이 effective_tp에 포함됩니다.")
-            st.session_state['fs_verified'] = True
+            st.success("모든 재고명이 무게 DB에 포함됩니다.")
 
-    if st.session_state.get('fs_verified') and missing:
-        st.markdown("### 누락된 재고명의 무게를 입력해주세요")
-        custom = st.session_state.get('fs_custom_weights', {})
-        for prod in missing:
-            w = st.number_input(f"{prod} ▶ 무게입력", min_value=1, key=f"w_{prod}")
-            if w:
-                custom[prod] = w
-        st.session_state['fs_custom_weights'] = custom
-
-    if st.session_state.get('fs_verified') and df is not None and st.button("✅ 실행"):
-        merged_tp = {**effective_tp, **st.session_state.get('fs_custom_weights', {})}
+    if df is not None and st.button("✅ 실행"):
+        merged_tp = effective_tp
         buf_all, buf_dom, buf_int = _process_fs(df, merged_tp, box_limit)
         st.session_state['fs_buf_all'] = buf_all.getvalue()
         st.session_state['fs_buf_dom'] = buf_dom.getvalue()
