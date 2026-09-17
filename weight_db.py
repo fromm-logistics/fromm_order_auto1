@@ -97,6 +97,42 @@ def save_weights_bulk(weights: dict) -> bool:
         return False
 
 
+def inject_floating_weight_btn():
+    """MD 관련 모든 페이지 우측에 구글 시트 플로팅 버튼 삽입."""
+    sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
+    st.markdown(f"""
+<style>
+.floating-weight-btn {{
+    position: fixed;
+    right: 24px;
+    top: 80px;
+    z-index: 9999;
+}}
+.floating-weight-btn a {{
+    display: block;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.75) !important;
+    padding: 10px 14px;
+    border-radius: 10px;
+    text-decoration: none !important;
+    font-size: 11px;
+    text-align: center;
+    line-height: 1.6;
+    transition: background 0.15s, border-color 0.15s;
+}}
+.floating-weight-btn a:hover {{
+    background: rgba(200,130,170,0.10);
+    border-color: rgba(200,130,170,0.35);
+    color: #fff !important;
+}}
+</style>
+<div class="floating-weight-btn">
+    <a href="{sheet_url}" target="_blank">📊 상시판매 재고<br>무게 추가/제거/수정</a>
+</div>
+""", unsafe_allow_html=True)
+
+
 def delete_weight(name: str) -> bool:
     """재고명 삭제."""
     try:
