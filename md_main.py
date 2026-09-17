@@ -1,43 +1,47 @@
 # md_main.py
 import streamlit as st
-from MD_FS import run_md_fs
-from MD_SS import run_md_ss
+from MD_FS import run_md_fs, target_products as fs_products
+from MD_SS import run_md_ss, target_products as ss_products
 from MD_general import run_md_general
+from weight_db import load_weights, save_weights_bulk, WEIGHT_SPREADSHEET_ID
+
+SHEET_URL = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
 
 
 def run_md_main():
-    """MD 나누기 메인 페이지를 렌더링합니다."""
     st.button("◀ 이전으로 돌아가기", on_click=lambda: st.session_state.update(page="main"))
     st.title("📋 MD 나누기")
 
-    st.markdown(
-        '<h2 style="color:#4f66b3; font-size:22px; margin-bottom:5px;">'
-        '구현된 기능</h2>',
-        unsafe_allow_html=True
-    )
-    st.button("FS 나누기", on_click=lambda: st.session_state.update(page="md_fs"))
-    st.button("SS 나누기", on_click=lambda: st.session_state.update(page="md_ss"))
+    st.button("FS 나누기",      on_click=lambda: st.session_state.update(page="md_fs"))
+    st.button("SS 나누기",      on_click=lambda: st.session_state.update(page="md_ss"))
     st.button("General 나누기", on_click=lambda: st.session_state.update(page="md_general"))
-    st.button("⚖️ 재고 무게 관리", on_click=lambda: st.session_state.update(page="weight_manager"))
 
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown(
-        '<h2 style="color:#888888; font-size:28px; margin-bottom:5px;">'
-        '구현 예정 기능</h2>',
-        unsafe_allow_html=True
-    )
-    st.button("송장등록 (구현예정)", disabled=True)
-    st.button("물류비 시뮬레이터 (구현예정)", disabled=True)
-    st.button("포토카드 갯수 (구현예정)", disabled=True)
+    st.markdown("---")
+    st.subheader("⚖️ 재고 무게 관리")
+
+    existing = load_weights()
+
+    if not existing:
+        st.warning("저장된 무게가 없습니다. 초기 데이터를 업로드해주세요.")
+        if st.button("📤 MD_FS + MD_SS 무게 초기 업로드"):
+            all_products = {**ss_products, **fs_products}  # FS가 중복 시 우선
+            with st.spinner(f"{len(all_products)}개 업로드 중..."):
+                if save_weights_bulk(all_products):
+                    st.success(f"✅ {len(all_products)}개 재고 무게 업로드 완료!")
+                    st.rerun()
+                else:
+                    st.error("업로드 실패")
+    else:
+        st.caption(f"현재 **{len(existing)}개** 재고 무게 저장됨")
+
+    st.link_button("🔗 구글 시트에서 무게 수정하기", SHEET_URL)
+
 
 def run_md_fs_page():
-    """FS1 나누기 페이지 호출"""
     run_md_fs()
 
 def run_md_ss_page():
-    """SS 나누기 페이지 호출"""
     run_md_ss()
 
 def run_md_general_page():
-    """General 나누기 페이지 호출"""
     run_md_general()
