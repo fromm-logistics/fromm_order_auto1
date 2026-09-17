@@ -44,7 +44,7 @@ if st.session_state.page == 'main':
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600&display=swap');
 .stApp { background: #0f1117; font-family: 'Noto Sans KR', sans-serif; }
 .stButton, .stButton > button { position: relative !important; z-index: 10 !important; pointer-events: auto !important; }
-.block-container { max-width: 640px !important; padding-top: 0 !important; position: relative; z-index: 1; }
+.block-container { max-width: 640px !important; padding-top: 48px !important; position: relative; z-index: 1; }
 .fromm-topbar { display: flex; align-items: center; padding: 28px 0; border-bottom: 1px solid rgba(255,255,255,0.06); margin-bottom: 36px; }
 .fromm-logo-mark { width: 28px; height: 28px; background: #c890b8; border-radius: 6px; display: flex; align-items: center; justify-content: center; margin-right: 10px; font-size: 14px; flex-shrink: 0; }
 .fromm-wordmark { font-size: 12px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: #e0e0e0; margin-right: 10px; }
