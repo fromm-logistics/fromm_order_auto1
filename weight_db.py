@@ -142,7 +142,7 @@ def inject_floating_weight_btn():
 </style>
 <div class="floating-weight-btn">
     <a href="{sheet_url}" target="_blank">
-        <span class="fw-icon">⚖️</span>
+        <span class="fw-icon">➡️</span>
         <span class="fw-label">재고 무게<br>추가/수정</span>
     </a>
 </div>
