@@ -5,12 +5,12 @@ import io, re, random
 import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
+from weight_db import load_weights  # ← 구글 시트 무게 DB
 
 # ───────────────────────────────────────────────────
 # 1) 유저가 수정·확장 가능한 영역:
-#    – 기본 target_products(재고명→무게 매핑)
+#    – 기본 target_products(재고명→무게 매핑) — 시트에 없는 경우 폴백
 #    – box_limit(박스 최대 용량)
-#    – exclude_products(상품명 기준 제외 목록)
 # ───────────────────────────────────────────────────
 target_products = {
     "[이태빈 팬미팅_PIT-A-PAT] 여권&포토카드": 200,
@@ -60,7 +60,7 @@ target_products = {
     "[김재중 콘서트MD_FLOWER] BANDANA / BLACK": 1000,
     "[김재중 콘서트MD_FLOWER] POUCH + KEYRING SET / GREEN": 500,
     "[김재중 콘서트MD_FLOWER] T-SHIRT / WHITE": 1000,
-    "[FLOWER GARDEN] POUCH + KEYRING SET_BLACK": 500,
+    "[FLOWER GARDEN] POUCH + KEYRING SET_Black": 500,
     "[김재중 콘서트MD_IM TWENTY] LIGHTSTICK CASE": 2500,
     "[김재중 콘서트MD_FLOWER] SLOGAN": 1000,
     "[이승윤 콘서트MD] OFFICIAL LIGHT STICK": 2500,
@@ -236,14 +236,12 @@ target_products = {
     "[CAM 정세운] Keyring (Love in the Margins Edition)": 300,
     "[CAM 카더가든 콘서트 MD_BLUE HEART] 후드티_M": 1875,
     "[쇼미더머니_2025 콘서트] 리무버블 스티커": 150,
-    "[이민혁 팬미팅MD_HUTAZONE] 슬로건": 750
+    "[이민혁 팬미팅MD_HUTAZONE] 슬로건": 750,
 }
 
 box_limit = 15000  # 기본 박스 최대 용량
 
-# ── 상품명 기준 제외 목록 (여기에 추가/삭제) ──────────────
-exclude_products = ['[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포토카드'
-]
+exclude_products = ['[온유 팝업_TOUGH LOVE] 페이퍼 인센스 특전 포토카드']
 
 
 def run_md_ss():
@@ -252,11 +250,14 @@ def run_md_ss():
               key="back_to_md_main_from_FS")
     st.title("📋 SS 나누기")
 
+    # ── 구글 시트 무게 로드 (시트 우선, 코드 내 값 폴백) ──
+    _sheet_w = load_weights()
+    effective_tp = {**target_products, **_sheet_w}
+
     uploaded = st.file_uploader("▶ SS 전용 CSV 업로드", type="csv", key="SS_csv")
     if uploaded:
         df = pd.read_csv(uploaded, dtype={'우편번호': str, '전화번호': str})
 
-        # ── 제외 상품 필터링 (검증 전 가장 먼저 실행) ──
         if exclude_products:
             before = len(df)
             df = df[~df['재고명'].astype(str).isin(exclude_products)]
@@ -271,7 +272,7 @@ def run_md_ss():
 
     missing = []
     if df is not None:
-        missing = sorted(set(df['재고명'].dropna()) - set(target_products))
+        missing = sorted(set(df['재고명'].dropna()) - set(effective_tp))
         if missing:
             st.warning("타겟에 정의되지 않은 재고명 발견:")
             for name in missing:
@@ -280,7 +281,7 @@ def run_md_ss():
             if st.button("검증"):
                 st.session_state['SS_verified'] = True
         else:
-            st.success("모든 재고명이 target_products에 포함됩니다.")
+            st.success("모든 재고명이 effective_tp에 포함됩니다.")
             st.session_state['SS_verified'] = True
 
     if st.session_state.get('SS_verified') and missing:
@@ -293,7 +294,7 @@ def run_md_ss():
         st.session_state['SS_custom_weights'] = custom
 
     if st.session_state.get('SS_verified') and df is not None and st.button("✅ 실행"):
-        merged_tp = {**target_products, **st.session_state.get('SS_custom_weights', {})}
+        merged_tp = {**effective_tp, **st.session_state.get('SS_custom_weights', {})}
         buf_all, buf_dom, buf_int = _process_ss(df, merged_tp, box_limit)
         st.session_state['SS_buf_all'] = buf_all.getvalue()
         st.session_state['SS_buf_dom'] = buf_dom.getvalue()
@@ -317,7 +318,6 @@ def run_md_ss():
 
 
 def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
-    # [수정 추가] 연산 안정성을 위해 복사본을 만들고 수량과 상품금액의 타입을 미리 맞춰줍니다.
     df = df.copy()
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
     df['상품금액'] = pd.to_numeric(df['상품금액'], errors='coerce').fillna(1).astype(float)
@@ -332,7 +332,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
             new_row['옵션명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
             new_row['재고명'] = "[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"
-            new_row['상품금액'] = 1.0  # float 형태로 대입
+            new_row['상품금액'] = 1.0
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
             df.loc[len(df)] = new_row
@@ -348,13 +348,11 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
             new_row['옵션명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
             new_row['재고명'] = "[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"
-            new_row['상품금액'] = 1.0  # float 형태로 대입
+            new_row['상품금액'] = 1.0
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
             df.loc[len(df)] = new_row
         tp["[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"] = 1
-
-    # (이하 기존 assign_order_numbers 및 나머지 코드 동일...)
 
     def assign_order_numbers(group):
         total_w, suffix, out = 0, 1, []
@@ -378,7 +376,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
         rows += assign_order_numbers(grp)
     res = pd.DataFrame(rows)
 
-    # 금액·통화·실결제금액
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
     res.loc[m, '결제통화'] = 'USD'
@@ -388,7 +385,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     cols.insert(cols.index('상품금액') + 1, '실결제금액')
     res = res[cols]
 
-    # 필터링 & 컬럼 추가
     res = res[res['수량'] > 0].copy()
     res['상품명'] = res['재고명']
     res.loc[res['국가명'] == "Japan", '국가명'] = "."
@@ -396,7 +392,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     dom  = res[res['국가코드'] == 'KR'].copy()
     intl = res[res['국가코드'] != 'KR'].copy()
 
-    # 특정 상품 복제
     def dup_special(ddf):
         mask = ddf['상품명'] == "[김재중 아시아 투어MD_J-PARTY] 핀브로치"
         dup = ddf[mask].copy()
@@ -411,7 +406,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     dom  = dup_special(dom)
     intl = dup_special(intl)
 
-    # 전화번호 포맷
     def fmt(p):
         s = re.sub(r"\D", "", str(p))
         if len(s) == 10 and s[:2] in ("10", "70"): s = "0" + s
@@ -436,7 +430,6 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     intl.loc[mask_jp, ['상세주소', '주']] = ''
     intl.loc[mask_jp, ['도시']] = '.'
 
-    # Excel 쓰기 & 하이라이트
     buf_all = io.BytesIO()
     with pd.ExcelWriter(buf_all, engine="openpyxl") as w:
         df.to_excel(w, sheet_name="원본", index=False)
