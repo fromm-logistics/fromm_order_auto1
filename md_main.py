@@ -3,11 +3,7 @@ import streamlit as st
 from MD_FS import run_md_fs
 from MD_SS import run_md_ss
 from MD_general import run_md_general
-from weight_db import inject_floating_weight_btn
-
-
 def run_md_main():
-    inject_floating_weight_btn()
     st.button("◀ 이전으로 돌아가기", on_click=lambda: st.session_state.update(page="main"))
     st.title("📋 MD 나누기")
 
