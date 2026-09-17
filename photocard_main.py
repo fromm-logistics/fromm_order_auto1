@@ -130,7 +130,7 @@ def run_photocard_main():
                 st.markdown(f"#### 📦 {item}")
                 st.dataframe(data['pivot'], use_container_width=True)
                 st.code(
-                    f"세트: {data['total_set']:,}EA  /  낱장: {data['total_loose']:,}EA  /  총: {data['total_qty']:,}EA",
+                    f"세트: {data['total_set']:,}EA / 낱장: {data['total_loose']:,}EA / 총: {data['total_qty']:,}EA",
                     language=None
                 )
 
