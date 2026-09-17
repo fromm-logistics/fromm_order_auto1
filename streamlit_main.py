@@ -8,7 +8,8 @@ from logistics_simulator import run_logistics_simulator
 
 # 페이지 상태 초기화 (메인에서만!)
 if 'page' not in st.session_state:
-    st.session_state.page = 'main'
+    # 새로고침 링크 등으로 직접 진입 시 URL 파라미터에서 페이지 복원
+    st.session_state.page = st.query_params.get("page", "main")
 
 # 송장 서브 메뉴 상태도 메인에서 기본 정의
 if 'invoice_courier' not in st.session_state:
