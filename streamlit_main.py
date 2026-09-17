@@ -67,7 +67,7 @@ if st.session_state.page == 'main':
     <div class="fromm-logo-mark"><svg width="28" height="28" viewBox="0 0 56 56" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M42.22 0H13.78C6.17 0 0 6.17 0 13.78v28.44C0 49.83 6.17 56 13.78 56h28.44C49.83 56 56 49.83 56 42.22V13.78C56 6.17 49.83 0 42.22 0Z" fill="url(#fromm_grad)"/><path d="M18.884 42.326c0 2.877 2.187 5.209 4.884 5.209 2.697 0 4.883-2.332 4.883-5.209 0-2.878-2.186-5.21-4.883-5.21h-4.884v5.21ZM18.884 16.278c0-2.876 2.275-5.208 5.08-5.208h20.315v5.208c0 2.878-2.274 5.21-5.078 5.21H23.964c-2.805 0-5.08-2.332-5.08-5.21ZM11.07 29.302c0-2.877 2.274-5.21 5.078-5.21h20.317v5.21c0 2.877-2.275 5.21-5.08 5.21H16.148c-2.804 0-5.078-2.333-5.078-5.21Z" fill="#fff"/><defs><linearGradient id="fromm_grad" x1="0" y1="0" x2="67.011" y2="21.202" gradientUnits="userSpaceOnUse"><stop offset="0.464" stop-color="#FB4866"/><stop offset="1" stop-color="#FB7E48"/></linearGradient></defs></svg></div>
     <span class="fromm-wordmark">FROMM</span>
     <span class="fromm-vdivider"></span>
-    <span class="fromm-system">Logistics System</span>
+    <span class="fromm-system">Logistics Team</span>
 </div>
 <div class="fromm-section-header">
     <span class="fromm-section-label">주문서</span>
