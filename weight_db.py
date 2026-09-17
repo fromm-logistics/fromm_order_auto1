@@ -98,37 +98,53 @@ def save_weights_bulk(weights: dict) -> bool:
 
 
 def inject_floating_weight_btn():
-    """MD 관련 모든 페이지 우측에 구글 시트 플로팅 버튼 삽입."""
+    """MD 관련 모든 페이지 우측 중앙에 구글 시트 플로팅 버튼 삽입."""
     sheet_url = f"https://docs.google.com/spreadsheets/d/{WEIGHT_SPREADSHEET_ID}/"
     st.markdown(f"""
 <style>
 .floating-weight-btn {{
     position: fixed;
-    right: 24px;
-    top: 80px;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
     z-index: 9999;
 }}
 .floating-weight-btn a {{
-    display: block;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(255,255,255,0.12);
-    color: rgba(255,255,255,0.75) !important;
-    padding: 10px 14px;
-    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 72px;
+    padding: 14px 8px;
+    background: linear-gradient(160deg, #FB4866 0%, #FB7E48 100%);
+    border-radius: 16px;
     text-decoration: none !important;
-    font-size: 11px;
-    text-align: center;
-    line-height: 1.6;
-    transition: background 0.15s, border-color 0.15s;
+    box-shadow: 0 4px 20px rgba(251,72,102,0.45);
+    transition: transform 0.15s, box-shadow 0.15s;
 }}
 .floating-weight-btn a:hover {{
-    background: rgba(200,130,170,0.10);
-    border-color: rgba(200,130,170,0.35);
+    transform: scale(1.06);
+    box-shadow: 0 6px 28px rgba(251,72,102,0.65);
+}}
+.floating-weight-btn .fw-icon {{
+    font-size: 22px;
+    line-height: 1;
+}}
+.floating-weight-btn .fw-label {{
+    font-size: 10px;
+    font-weight: 600;
     color: #fff !important;
+    text-align: center;
+    line-height: 1.4;
+    word-break: keep-all;
 }}
 </style>
 <div class="floating-weight-btn">
-    <a href="{sheet_url}" target="_blank">📊 상시판매 재고<br>무게 추가/제거/수정</a>
+    <a href="{sheet_url}" target="_blank">
+        <span class="fw-icon">⚖️</span>
+        <span class="fw-label">재고 무게<br>추가/수정</span>
+    </a>
 </div>
 """, unsafe_allow_html=True)
 
