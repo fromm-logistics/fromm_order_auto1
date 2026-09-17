@@ -124,17 +124,9 @@ def inject_floating_weight_btn(show_refresh: bool = False):
         )
         # onclick: 페이지 내 '새로고침' 텍스트를 가진 버튼을 JS로 클릭
         # <a href> 대신 div+onclick 사용 — Streamlit에서 <a>는 항상 새 탭으로 열림
-        js = (
-            "(function(){"
-            "var btns=document.querySelectorAll('button');"
-            "for(var i=0;i<btns.length;i++){"
-            "var t=btns[i].innerText||btns[i].textContent||'';"
-            "if(t.indexOf('\\uc0c8\\ub85c\\uace0\\uce68')!==-1)"  # 새로고침
-            "{btns[i].click();return;}"
-            "}})()"
-        )
+        # onclick 제거 — components.html JS가 이 id를 찾아 클릭 이벤트를 연결함
         refresh_item_html = (
-            f'<div class="floating-refresh-btn" onclick="{js}">'
+            '<div id="floating-refresh-trigger" class="floating-refresh-btn">'
             '<span class="fr-icon">🔄</span>'
             '<span class="fr-label">새로고침</span>'
             '</div>'
