@@ -549,8 +549,8 @@ def run_invoice_main():
                                 if not file_names:
                                     st.error("❌ ZIP 내에 xlsx 파일이 없습니다.")
                                 else:
-                                    st.info(f"📂 ZIP 내 파일 {len(file_names)}개 처리 중…")
                                     skip_log = []
+                                    file_stats = []
                                     for fname in file_names:
                                         try:
                                             data = zf.read(fname)
@@ -572,13 +572,22 @@ def run_invoice_main():
                                                     df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].astype(str).str.replace(r'\s+', '', regex=True).values
                                                     df_raw.loc[sfx_mask, _col_courier] = 'fastbox'
 
-                                            # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
+                                            # 1. '판매사 품주번호' 열 확인
                                             col_id = '판매사 품주번호'
                                             if col_id not in df_raw.columns:
                                                 skip_log.append(f"{fname}: '{col_id}' 열 없음")
                                                 continue
-                                            df_raw = df_raw[df_raw[col_id].astype(str).str.len() >= 8]
-                                            df_raw = df_raw[df_raw[col_id].astype(str).str[7] == '-']
+
+                                            # NAN_ 형식, 순수 숫자(증정품), 빈값 행 제거
+                                            # (위치 기반 str[7]=='-' 대신 패턴 기반으로 변경)
+                                            _sid = df_raw[col_id].astype(str).str.strip()
+                                            df_raw = df_raw[
+                                                (_sid.str.len() > 0) &
+                                                (_sid.str.lower() != 'nan') &
+                                                (~_sid.str.upper().str.startswith('NAN_')) &
+                                                (~_sid.str.match(r'^\d{10,}$'))
+                                            ]
+                                            rows_before = len(df_raw)
 
                                             # 2. 필요 열만 남기기
                                             required = ['판매사 품주번호', '희망배송사', '해외배송송장번호', '수량']
@@ -589,22 +598,29 @@ def run_invoice_main():
                                             df_raw = df_raw[required]
 
                                             # 3. '판매사 품주번호' 앞 7자리만 남기기
+                                            df_raw = df_raw.copy()
                                             df_raw['판매사 품주번호'] = df_raw['판매사 품주번호'].astype(str).str[:7]
 
-                                            # 3-1. '희망배송사'에서 emspremium → ems 치환
-                                            df_raw['희망배송사'] = df_raw['희망배송사'].str.replace('emspremium', 'ems', regex=False)
+                                            # 3-1. '희망배송사' 소문자 변환 + emspremium → ems 치환
+                                            df_raw['희망배송사'] = (
+                                                df_raw['희망배송사'].astype(str)
+                                                .str.strip().str.lower()
+                                                .str.replace('emspremium', 'ems', regex=False)
+                                            )
 
                                             # 4. 열 이름 변경
                                             df_raw.columns = ['id', 'courier', 'waybill', 'amount']
 
                                             all_dfs.append(df_raw)
+                                            file_stats.append(f"✅ {fname}: {len(df_raw)}행")
 
                                         except Exception as file_err:
                                             skip_log.append(f"{fname}: 오류 — {file_err}")
                                             continue
 
-                                    if skip_log:
-                                        st.warning("⚠️ 아래 파일은 건너뜁니다:\n" + "\n".join(f"• {m}" for m in skip_log))
+                                    # 처리 현황 저장 (rerun 후에도 표시)
+                                    st.session_state['fb_file_stats'] = file_stats
+                                    st.session_state['fb_skip_log'] = skip_log
 
                             if not all_dfs:
                                 raise ValueError("처리된 데이터가 없습니다. 파일 구조를 확인해 주세요.")
@@ -614,6 +630,8 @@ def run_invoice_main():
                             df_combined['amount'] = pd.to_numeric(
                                 df_combined['amount'], errors='coerce'
                             ).fillna(0).astype(int)
+                            # courier 소문자 보장 (최종 단계에서 한 번 더 적용)
+                            df_combined['courier'] = df_combined['courier'].astype(str).str.lower().str.strip()
                             df_combined = df_combined.groupby(
                                 ['id', 'courier'], as_index=False
                             ).agg({'waybill': 'first', 'amount': 'sum'})
@@ -634,6 +652,15 @@ def run_invoice_main():
                 if st.session_state.df_result is not None:
                     st.write("---")
                     st.markdown("### 4단계: 변환된 파일 저장")
+                    # 파일별 처리 현황 표시
+                    _stats = st.session_state.get('fb_file_stats', [])
+                    _skips = st.session_state.get('fb_skip_log', [])
+                    if _stats or _skips:
+                        with st.expander(f"📋 파일별 처리 현황 (총 {len(_stats)}개 성공 / {len(_skips)}개 실패)"):
+                            for s in _stats:
+                                st.write(s)
+                            for s in _skips:
+                                st.warning(f"⚠️ {s}")
                     st.dataframe(st.session_state.df_result, use_container_width=True)
 
                     today_str = datetime.today().strftime('%Y%m%d')
