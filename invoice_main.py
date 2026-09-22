@@ -322,7 +322,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "Wonderwall(해외)"]
+                                    df = df[df['판매처'] != "wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -540,61 +540,71 @@ def run_invoice_main():
                                 if not use_pyzipper:
                                     zf.setpassword(pw)
 
-                                # '주문목록_숫자' 파일 목록 수집 후 정렬
+                                # ZIP 내 xlsx 파일 전체 수집 (이름 패턴 무관)
                                 file_names = sorted(
                                     n for n in zf.namelist()
-                                    if re.search(r'주문목록_\d+', n)
+                                    if n.lower().endswith('.xlsx') and not n.startswith('__')
                                 )
 
                                 if not file_names:
-                                    st.error("❌ ZIP 내에 '주문목록_숫자' 형식의 파일이 없습니다.")
+                                    st.error("❌ ZIP 내에 xlsx 파일이 없습니다.")
                                 else:
+                                    st.info(f"📂 ZIP 내 파일 {len(file_names)}개 처리 중…")
+                                    skip_log = []
                                     for fname in file_names:
-                                        data = zf.read(fname)
-                                        df_raw = pd.read_excel(
-                                            io.BytesIO(data), engine='openpyxl', dtype=str
-                                        )
-                                        df_raw.columns = df_raw.columns.astype(str).str.strip()
+                                        try:
+                                            data = zf.read(fname)
+                                            df_raw = pd.read_excel(
+                                                io.BytesIO(data), engine='openpyxl', dtype=str
+                                            )
+                                            df_raw.columns = df_raw.columns.astype(str).str.strip()
 
-                                        # 0. Sfexpress 전처리
-                                        #    '희망배송사' 값이 'sfexpress'(대소문자 무관)이면:
-                                        #    '해외배송송장번호' ← H열(index 7) 값으로 교체
-                                        #    '희망배송사' ← 'fastbox'로 교체
-                                        if len(df_raw.columns) >= 8:
-                                            col_h = df_raw.columns[7]
-                                            _col_courier = '희망배송사' if '희망배송사' in df_raw.columns else df_raw.columns[3]
-                                            _col_waybill = '해외배송송장번호' if '해외배송송장번호' in df_raw.columns else df_raw.columns[4]
-                                            sfx_mask = df_raw[_col_courier].astype(str).str.strip().str.lower() == 'sfexpress'
-                                            if sfx_mask.any():
-                                                df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].astype(str).str.replace(r'\s+', '', regex=True).values
-                                                df_raw.loc[sfx_mask, _col_courier] = 'fastbox'
+                                            # 0. Sfexpress 전처리
+                                            #    '희망배송사' 값이 'sfexpress'(대소문자 무관)이면:
+                                            #    '해외배송송장번호' ← H열(index 7) 값으로 교체
+                                            #    '희망배송사' ← 'fastbox'로 교체
+                                            if len(df_raw.columns) >= 8:
+                                                col_h = df_raw.columns[7]
+                                                _col_courier = '희망배송사' if '희망배송사' in df_raw.columns else df_raw.columns[3]
+                                                _col_waybill = '해외배송송장번호' if '해외배송송장번호' in df_raw.columns else df_raw.columns[4]
+                                                sfx_mask = df_raw[_col_courier].astype(str).str.strip().str.lower() == 'sfexpress'
+                                                if sfx_mask.any():
+                                                    df_raw.loc[sfx_mask, _col_waybill] = df_raw.loc[sfx_mask, col_h].astype(str).str.replace(r'\s+', '', regex=True).values
+                                                    df_raw.loc[sfx_mask, _col_courier] = 'fastbox'
 
-                                        # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
-                                        col_id = '판매사 품주번호'
-                                        if col_id not in df_raw.columns:
-                                            st.warning(f"⚠️ {fname}: '{col_id}' 열 없음 — 건너뜁니다.")
+                                            # 1. '판매사 품주번호' 8번째 자리가 '-'가 아닌 행 삭제
+                                            col_id = '판매사 품주번호'
+                                            if col_id not in df_raw.columns:
+                                                skip_log.append(f"{fname}: '{col_id}' 열 없음")
+                                                continue
+                                            df_raw = df_raw[df_raw[col_id].astype(str).str.len() >= 8]
+                                            df_raw = df_raw[df_raw[col_id].astype(str).str[7] == '-']
+
+                                            # 2. 필요 열만 남기기
+                                            required = ['판매사 품주번호', '희망배송사', '해외배송송장번호', '수량']
+                                            missing_cols = [c for c in required if c not in df_raw.columns]
+                                            if missing_cols:
+                                                skip_log.append(f"{fname}: 열 누락 {missing_cols}")
+                                                continue
+                                            df_raw = df_raw[required]
+
+                                            # 3. '판매사 품주번호' 앞 7자리만 남기기
+                                            df_raw['판매사 품주번호'] = df_raw['판매사 품주번호'].astype(str).str[:7]
+
+                                            # 3-1. '희망배송사'에서 emspremium → ems 치환
+                                            df_raw['희망배송사'] = df_raw['희망배송사'].str.replace('emspremium', 'ems', regex=False)
+
+                                            # 4. 열 이름 변경
+                                            df_raw.columns = ['id', 'courier', 'waybill', 'amount']
+
+                                            all_dfs.append(df_raw)
+
+                                        except Exception as file_err:
+                                            skip_log.append(f"{fname}: 오류 — {file_err}")
                                             continue
-                                        df_raw = df_raw[df_raw[col_id].astype(str).str.len() >= 8]
-                                        df_raw = df_raw[df_raw[col_id].astype(str).str[7] == '-']
 
-                                        # 2. 필요 열만 남기기
-                                        required = ['판매사 품주번호', '희망배송사', '해외배송송장번호', '수량']
-                                        missing = [c for c in required if c not in df_raw.columns]
-                                        if missing:
-                                            st.warning(f"⚠️ {fname}: 열 누락 {missing} — 건너뜁니다.")
-                                            continue
-                                        df_raw = df_raw[required]
-
-                                        # 3. '판매사 품주번호' 앞 7자리만 남기기
-                                        df_raw['판매사 품주번호'] = df_raw['판매사 품주번호'].astype(str).str[:7]
-
-                                        # 3-1. '희망배송사'에서 emspremium → ems 치환
-                                        df_raw['희망배송사'] = df_raw['희망배송사'].str.replace('emspremium', 'ems', regex=False)
-
-                                        # 4. 열 이름 변경
-                                        df_raw.columns = ['id', 'courier', 'waybill', 'amount']
-
-                                        all_dfs.append(df_raw)
+                                    if skip_log:
+                                        st.warning("⚠️ 아래 파일은 건너뜁니다:\n" + "\n".join(f"• {m}" for m in skip_log))
 
                             if not all_dfs:
                                 raise ValueError("처리된 데이터가 없습니다. 파일 구조를 확인해 주세요.")
