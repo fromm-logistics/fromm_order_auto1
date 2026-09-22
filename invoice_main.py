@@ -600,6 +600,7 @@ def run_invoice_main():
                                             # 3. '판매사 품주번호' 앞 7자리만 남기기
                                             df_raw = df_raw.copy()
                                             df_raw['판매사 품주번호'] = df_raw['판매사 품주번호'].astype(str).str[:7]
+                                            df_raw = df_raw[df_raw['판매사 품주번호'].str.match(r'^\d{7}$')]
 
                                             # 3-1. '희망배송사' 소문자 변환 + emspremium → ems 치환
                                             df_raw['희망배송사'] = (
