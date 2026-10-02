@@ -460,28 +460,35 @@ def run_supplies_main():
                 # ── 품목별 누적 수량 ───────────────────────────
                 st.subheader("품목별 누적 수량")
 
+                # 품명 + 단가 기준 집계 (같은 품명이라도 단가 다르면 별도 행)
                 item_agg = (
-                    df_chart.groupby('품명')
+                    df_chart.groupby(['품명', '단가'])
                     .agg(
-                        발주횟수=('수량', 'count'),
                         누적수량=('수량', 'sum'),
-                        최근단가=('단가', 'last'),
-                        누적공급가액=('공급가액', 'sum'),
                         업체=('업체', lambda x: ' / '.join(sorted(x.unique()))),
-                        기간=('발주일자', lambda x: f"{x.min()} ~ {x.max()}"
-                              if x.min() != x.max() else x.min()),
+                        규격=('규격', lambda x: x.mode().iloc[0] if len(x) > 0 else ''),
                     )
                     .reset_index()
-                    .sort_values('누적수량', ascending=False)
                 )
 
-                # 숫자 포맷
-                item_agg['누적수량']    = item_agg['누적수량'].apply(_fmt_n)
-                item_agg['최근단가']    = item_agg['최근단가'].apply(_fmt_c)
-                item_agg['누적공급가액'] = item_agg['누적공급가액'].apply(_fmt_c)
-                item_agg['발주횟수']    = item_agg['발주횟수'].apply(_fmt_n)
+                # 에어캡봉투 → 규격(사이즈)으로 품명 교체
+                def _item_display_name(row):
+                    if '에어캡봉투' in str(row['품명']):
+                        규격 = str(row.get('규격', ''))
+                        size = 규격.split(' / ')[-1].strip() if ' / ' in 규격 else 규격.strip()
+                        return size if size else row['품명']
+                    return row['품명']
 
-                # 열 순서 정리
-                item_agg = item_agg[['품명', '업체', '기간', '발주횟수', '누적수량', '최근단가', '누적공급가액']]
+                item_agg['품명'] = item_agg.apply(_item_display_name, axis=1)
+
+                # 품명 오름차순 정렬
+                item_agg = item_agg.sort_values('품명', ascending=True).reset_index(drop=True)
+
+                # 숫자 포맷
+                item_agg['누적수량'] = item_agg['누적수량'].apply(_fmt_n)
+                item_agg['단가']     = item_agg['단가'].apply(_fmt_c)
+
+                # 열 선택
+                item_agg = item_agg[['품명', '업체', '누적수량', '단가']]
 
                 st.dataframe(item_agg, use_container_width=True, hide_index=True)
