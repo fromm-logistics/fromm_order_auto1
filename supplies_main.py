@@ -7,8 +7,8 @@ import io, json, os, re
 # 저장 경로
 # ──────────────────────────────────────────────────────────────
 
-_DIR       = os.path.dirname(os.path.abspath(__file__))
-SAVE_FILE  = os.path.join(_DIR, 'supplies_data.json')
+_DIR      = os.path.dirname(os.path.abspath(__file__))
+SAVE_FILE = os.path.join(_DIR, 'supplies_data.json')
 
 # ──────────────────────────────────────────────────────────────
 # 파싱 유틸
@@ -38,6 +38,16 @@ def _company_from_filename(filename):
     for ext in ['.xlsx', '.xls']:
         base = base.replace(ext, '')
     return base.split('_')[0]
+
+def _enhance_item_name(품명, 규격):
+    """에어캡 류 품목: 사이즈를 품목명에 포함해 구별
+    규격 = '0.04 / 15*15+5'  →  size = '15*15+5'
+    규격 = '10*20+5'          →  size = '10*20+5'
+    """
+    if '에어캡' not in 품명:
+        return 품명
+    size = 규격.split(' / ')[-1].strip() if 규격 else ''
+    return f"{품명} {size}" if size else 품명
 
 # ──────────────────────────────────────────────────────────────
 # WONDERWALL 포맷 파서  (씨에스팩·하보크 등)
@@ -69,6 +79,7 @@ def _parse_wonderwall(df, filename):
         if '\n' in name: continue
         if any(k in name.lower() for k in STOP): break
 
+        규격 = g(i, 3)
         supply_amt = int(gn(i, 10))
         vat        = int(gn(i, 11))
         items.append({
@@ -77,8 +88,8 @@ def _parse_wonderwall(df, filename):
             '발주번호':    order_no,
             '입고처':      destination,
             '담당자':      manager,
-            '품명':        name,
-            '규격':        g(i, 3),
+            '품명':        _enhance_item_name(name, 규격),
+            '규격':        규격,
             '단가':        int(gn(i, 8)),
             '수량':        int(gn(i, 9)),
             '공급가액':    supply_amt,
@@ -105,7 +116,7 @@ def _parse_bum_aircap(df, filename):
         if '발주일자' in g(i, 0):
             order_date = _date(g(i, 3)); break
 
-    # 담당자: col 0에 '담당자 :' 포함된 행 (단, '담당자' 단독 행은 수신처일 수 있으므로 ':' 포함 우선)
+    # 담당자: col 0에 '담당자 :' 포함된 행
     manager = ''
     for i in range(nrows):
         c0 = g(i, 0)
@@ -120,15 +131,12 @@ def _parse_bum_aircap(df, filename):
             cell = g(i, j)
             if '배송지' not in cell:
                 continue
-            # 패턴 B: 셀 내부에 주소가 포함된 경우
             m = re.search(r'배송지\s*:?\s*([^\n:]+)', cell)
             addr = m.group(1).strip() if m else ''
-            # 의미 있는 주소인지 확인 (레이블만 있는 경우 제외)
             if addr and len(addr) > 4 and not re.match(r'^[\s:]*$', addr):
                 destination = addr
             else:
-                # 패턴 A: 옆 열(주로 col 3)에 주소
-                destination = g(i, 3) or g(i, j + 1) if j + 1 < ncols else g(i, 3)
+                destination = g(i, 3) or (g(i, j + 1) if j + 1 < ncols else '')
             break
         if destination:
             break
@@ -145,6 +153,8 @@ def _parse_bum_aircap(df, filename):
     for i in range(header_row + 1, nrows):
         no = g(i, 0)
         if not re.match(r'^\d+$', no): break
+
+        규격 = f"{g(i,4)} / {g(i,5)}" if g(i, 4) else g(i, 5)
         supply_amt = int(gn(i, 9))
         vat        = round(supply_amt * 0.1)
         items.append({
@@ -153,8 +163,8 @@ def _parse_bum_aircap(df, filename):
             '발주번호':    '',
             '입고처':      destination,
             '담당자':      manager,
-            '품명':        g(i, 1),
-            '규격':        f"{g(i,4)} / {g(i,5)}" if g(i,4) else g(i,5),
+            '품명':        _enhance_item_name(g(i, 1), 규격),
+            '규격':        규격,
             '단가':        int(gn(i, 8)),
             '수량':        int(gn(i, 6)),
             '공급가액':    supply_amt,
@@ -202,7 +212,18 @@ def _load_saved():
 
 def _save_data(df):
     with open(SAVE_FILE, 'w', encoding='utf-8') as f:
-        json.dump(df.to_dict(orient='records'), f, ensure_ascii=False, indent=2, default=str)
+        json.dump(df.to_dict(orient='records'), f,
+                  ensure_ascii=False, indent=2, default=str)
+
+def _delete_saved_file(saved_df, filename):
+    """저장 데이터에서 특정 파일명 제거 후 저장"""
+    new_df = saved_df[saved_df['파일명'] != filename].reset_index(drop=True)
+    if new_df.empty:
+        if os.path.exists(SAVE_FILE):
+            os.remove(SAVE_FILE)
+    else:
+        _save_data(new_df)
+    return new_df
 
 # ──────────────────────────────────────────────────────────────
 # 데이터 병합 + 날짜 정렬
@@ -221,9 +242,9 @@ def _merge_and_sort(*dfs):
 # 표시용 포맷 (천단위 쉼표)
 # ──────────────────────────────────────────────────────────────
 
-_DISPLAY_COLS   = ['발주일자', '업체', '발주번호', '입고처',
-                   '품명', '규격', '단가', '수량', '공급가액', '부가세', 'VAT포함금액']
-_CURRENCY_COLS  = ['단가', '공급가액', '부가세', 'VAT포함금액']
+_DISPLAY_COLS  = ['발주일자', '업체', '발주번호', '입고처',
+                  '품명', '규격', '단가', '수량', '공급가액', '부가세', 'VAT포함금액']
+_CURRENCY_COLS = ['단가', '공급가액', '부가세', 'VAT포함금액']
 
 def _fmt_c(x):
     try: return f"₩{int(x):,}"
@@ -234,7 +255,6 @@ def _fmt_n(x):
     except: return str(x)
 
 def _display_df(df):
-    """테이블 표시용 — 숫자 열을 천단위 쉼표 문자열로 변환"""
     out = df[_DISPLAY_COLS].copy().reset_index(drop=True)
     for col in _CURRENCY_COLS:
         out[col] = out[col].apply(_fmt_c)
@@ -250,7 +270,7 @@ def run_supplies_main():
               on_click=lambda: st.session_state.update(page='main'))
     st.title("📦 부자재 관리")
 
-    # ── 저장된 데이터 로드 (세션 초기화 시 한 번만) ─────────────
+    # 저장된 데이터 로드 (세션 초기화 시 한 번만)
     if 'supplies_saved_df' not in st.session_state:
         st.session_state['supplies_saved_df'] = _load_saved()
 
@@ -258,7 +278,6 @@ def run_supplies_main():
     new_df   = st.session_state.get('supplies_new_df',   pd.DataFrame())
     all_df   = _merge_and_sort(saved_df, new_df)
 
-    # ── 탭 ────────────────────────────────────────────────────
     tab1, tab2 = st.tabs(["📁 파일 관리", "📊 대시보드 보기"])
 
     # ══════════════════════════════════════════════════════════
@@ -266,7 +285,6 @@ def run_supplies_main():
     # ══════════════════════════════════════════════════════════
     with tab1:
 
-        # 파일 업로드
         uploaded_files = st.file_uploader(
             "발주서 Excel 파일 업로드 (여러 파일 동시 업로드 가능)",
             type=['xlsx'],
@@ -274,7 +292,7 @@ def run_supplies_main():
             key='supplies_uploader',
         )
 
-        # 업로드된 파일 파싱 (파일 집합이 바뀐 경우만)
+        # 파일 집합이 바뀐 경우만 파싱
         if uploaded_files:
             uploaded_names = frozenset(uf.name for uf in uploaded_files)
             prev_names     = st.session_state.get('supplies_prev_names', frozenset())
@@ -288,10 +306,9 @@ def run_supplies_main():
                         errors.append(f"{uf.name}: {err}")
                 for e in errors:
                     st.warning(f"⚠️ {e}")
-
                 if rows:
                     new_df = pd.DataFrame(rows)
-                    st.session_state['supplies_new_df']    = new_df
+                    st.session_state['supplies_new_df']     = new_df
                     st.session_state['supplies_prev_names'] = uploaded_names
                     all_df = _merge_and_sort(saved_df, new_df)
                 else:
@@ -299,16 +316,13 @@ def run_supplies_main():
 
         st.markdown("")
 
-        # ── 버튼 행 ─────────────────────────────────────────
+        # ── 저장 / 초기화 버튼 ──────────────────────────────
         btn_save, btn_clr, _ = st.columns([1, 1, 3])
-
         with btn_save:
             save_clicked = st.button("💾 저장", type="primary", disabled=all_df.empty)
-
         with btn_clr:
-            clr_clicked = st.button("🗑️ 전체 초기화")
+            clr_clicked  = st.button("🗑️ 전체 초기화")
 
-        # 저장 처리
         if save_clicked and not all_df.empty:
             _save_data(all_df)
             st.session_state['supplies_saved_df'] = all_df.copy()
@@ -318,7 +332,6 @@ def run_supplies_main():
             new_df   = pd.DataFrame()
             st.success(f"✅ {len(all_df):,}건 저장 완료!")
 
-        # 초기화 확인
         if clr_clicked:
             st.session_state['_supplies_confirm_clr'] = True
 
@@ -340,7 +353,7 @@ def run_supplies_main():
 
         st.markdown("---")
 
-        # ── 로드된 파일 현황 ─────────────────────────────────
+        # ── 파일 목록 (삭제 버튼 포함) ──────────────────────
         if all_df.empty:
             st.info("📂 발주서 파일을 업로드하거나 저장된 데이터가 없습니다.")
         else:
@@ -348,9 +361,22 @@ def run_supplies_main():
             all_names   = sorted(all_df['파일명'].unique())
 
             st.subheader(f"파일 현황 ({len(all_names)}건)")
+
             for fn in all_names:
-                status = "💾 저장됨" if fn in saved_names else "🆕 미저장 (저장 버튼을 눌러 확정하세요)"
-                st.write(f"- **{fn}** — {status}")
+                is_saved = fn in saved_names
+                c_info, c_del = st.columns([9, 1])
+                with c_info:
+                    icon   = "💾" if is_saved else "🆕"
+                    status = "저장됨" if is_saved else "미저장 — 저장 버튼으로 확정"
+                    st.write(f"{icon} **{fn}** — {status}")
+                with c_del:
+                    if is_saved:
+                        if st.button("🗑️", key=f"del_{fn}", help=f"'{fn}' 저장 데이터에서 삭제"):
+                            updated = _delete_saved_file(saved_df, fn)
+                            st.session_state['supplies_saved_df'] = updated
+                            saved_df = updated
+                            all_df   = _merge_and_sort(saved_df, new_df)
+                            st.rerun()
 
             # 신규 업로드 미리보기
             if not new_df.empty:
@@ -375,10 +401,10 @@ def run_supplies_main():
 
             # ── 요약 지표 ─────────────────────────────────────
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("📋 발주 파일",    f"{df['파일명'].nunique()}건")
-            m2.metric("🏢 업체 수",      f"{df['업체'].nunique()}개")
-            m3.metric("💰 공급가액 합계", f"₩{df_ord['공급가액'].sum():,}")
-            m4.metric("💳 VAT포함 합계",  f"₩{df_ord['VAT포함금액'].sum():,}")
+            m1.metric("📋 발주 파일",     f"{df['파일명'].nunique()}건")
+            m2.metric("🏢 업체 수",        f"{df['업체'].nunique()}개")
+            m3.metric("💰 공급가액 합계",  f"₩{df_ord['공급가액'].sum():,}")
+            m4.metric("💳 VAT포함 합계",   f"₩{df_ord['VAT포함금액'].sum():,}")
 
             st.markdown("---")
 
@@ -392,7 +418,6 @@ def run_supplies_main():
             with f3:
                 search_item = st.text_input("품명 검색", placeholder="예: 에어캡, 박스")
 
-            # 필터 적용
             filt = df.copy()
             if sel_company != '전체':
                 filt = filt[filt['업체'] == sel_company]
@@ -416,42 +441,43 @@ def run_supplies_main():
                 st.download_button("⬇️ CSV 다운로드", csv_bytes,
                                    "부자재_발주내역.csv", "text/csv")
 
-            # ── 차트 ──────────────────────────────────────────
             df_chart = filt[filt['수량'] > 0]
             if not df_chart.empty:
                 st.markdown("---")
-                c1, c2 = st.columns(2)
 
-                with c1:
-                    st.subheader("업체별 공급가액")
-                    by_company = (df_chart.groupby('업체')['공급가액']
-                                  .sum().sort_values(ascending=False))
-                    st.bar_chart(by_company)
+                # ── 업체별 공급가액 차트 ───────────────────────
+                st.subheader("업체별 공급가액")
+                by_company = (df_chart.groupby('업체')['공급가액']
+                              .sum().sort_values(ascending=False))
+                st.bar_chart(by_company)
 
-                with c2:
-                    st.subheader("품목별 공급가액 (상위 10)")
-                    by_item = (df_chart.groupby('품명')['공급가액']
-                               .sum().sort_values(ascending=False).head(10))
-                    st.bar_chart(by_item)
-
-                # ── 업체별 소계 요약 ───────────────────────────
                 st.markdown("---")
-                st.subheader("업체별 소계")
-                summary = (
-                    df_chart.groupby('업체')
+
+                # ── 품목별 누적 수량 ───────────────────────────
+                st.subheader("품목별 누적 수량")
+
+                item_agg = (
+                    df_chart.groupby('품명')
                     .agg(
-                        발주일자=('발주일자', lambda x: ', '.join(sorted(x.unique()))),
-                        품목수=('품명', 'nunique'),
-                        총수량=('수량', 'sum'),
-                        공급가액합계=('공급가액', 'sum'),
-                        부가세합계=('부가세', 'sum'),
-                        VAT포함합계=('VAT포함금액', 'sum'),
+                        발주횟수=('수량', 'count'),
+                        누적수량=('수량', 'sum'),
+                        최근단가=('단가', 'last'),
+                        누적공급가액=('공급가액', 'sum'),
+                        업체=('업체', lambda x: ' / '.join(sorted(x.unique()))),
+                        기간=('발주일자', lambda x: f"{x.min()} ~ {x.max()}"
+                              if x.min() != x.max() else x.min()),
                     )
                     .reset_index()
+                    .sort_values('누적수량', ascending=False)
                 )
-                summary['총수량']     = summary['총수량'].apply(_fmt_n)
-                summary['공급가액합계'] = summary['공급가액합계'].apply(_fmt_c)
-                summary['부가세합계']   = summary['부가세합계'].apply(_fmt_c)
-                summary['VAT포함합계']  = summary['VAT포함합계'].apply(_fmt_c)
 
-                st.dataframe(summary, use_container_width=True, hide_index=True)
+                # 숫자 포맷
+                item_agg['누적수량']    = item_agg['누적수량'].apply(_fmt_n)
+                item_agg['최근단가']    = item_agg['최근단가'].apply(_fmt_c)
+                item_agg['누적공급가액'] = item_agg['누적공급가액'].apply(_fmt_c)
+                item_agg['발주횟수']    = item_agg['발주횟수'].apply(_fmt_n)
+
+                # 열 순서 정리
+                item_agg = item_agg[['품명', '업체', '기간', '발주횟수', '누적수량', '최근단가', '누적공급가액']]
+
+                st.dataframe(item_agg, use_container_width=True, hide_index=True)
