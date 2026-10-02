@@ -19,8 +19,11 @@ def _s(val):
     return '' if v.lower() == 'nan' else v
 
 def _n(val):
+    s = str(val).strip()
+    if not s or s.lower() == 'nan':
+        return 0.0
     try:
-        return float(str(val).replace(',', '').strip())
+        return float(s.replace(',', ''))
     except Exception:
         return 0.0
 
@@ -94,16 +97,43 @@ def _parse_bum_aircap(df, filename):
     def g(r, c):  return _s(df.iat[r, c])  if r < nrows and c < ncols else ''
     def gn(r, c): return _n(df.iat[r, c])  if r < nrows and c < ncols else 0.0
 
-    company    = _company_from_filename(filename)
-    order_date = _date(g(8, 3))
-    manager    = g(10, 3)
+    company = _company_from_filename(filename)
 
+    # 발주일자: col 0에 '발주일자' 포함된 행 동적 탐색
+    order_date = ''
+    for i in range(nrows):
+        if '발주일자' in g(i, 0):
+            order_date = _date(g(i, 3)); break
+
+    # 담당자: col 0에 '담당자 :' 포함된 행 (단, '담당자' 단독 행은 수신처일 수 있으므로 ':' 포함 우선)
+    manager = ''
+    for i in range(nrows):
+        c0 = g(i, 0)
+        if '담당자' in c0 and ':' in c0:
+            manager = g(i, 3); break
+
+    # 배송지: 패턴 A (col 0 = "배송지", col 3 = 주소)
+    #         패턴 B (어느 셀이든 "배송지: 주소..." 내장)
     destination = ''
     for i in range(nrows):
-        v = g(i, 0)
-        if '배송지' in v or '입고처' in v:
-            destination = g(i, 3); break
+        for j in range(ncols):
+            cell = g(i, j)
+            if '배송지' not in cell:
+                continue
+            # 패턴 B: 셀 내부에 주소가 포함된 경우
+            m = re.search(r'배송지\s*:?\s*([^\n:]+)', cell)
+            addr = m.group(1).strip() if m else ''
+            # 의미 있는 주소인지 확인 (레이블만 있는 경우 제외)
+            if addr and len(addr) > 4 and not re.match(r'^[\s:]*$', addr):
+                destination = addr
+            else:
+                # 패턴 A: 옆 열(주로 col 3)에 주소
+                destination = g(i, 3) or g(i, j + 1) if j + 1 < ncols else g(i, 3)
+            break
+        if destination:
+            break
 
+    # 헤더 행: col 0 == 'No'
     header_row = None
     for i in range(nrows):
         if g(i, 0) == 'No':
