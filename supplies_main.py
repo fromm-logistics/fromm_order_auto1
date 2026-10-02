@@ -362,6 +362,13 @@ def run_supplies_main():
 
             st.subheader(f"파일 현황 ({len(all_names)}건)")
 
+            # 삭제 처리: 루프 렌더링 전에 처리 (Streamlit 루프+rerun 버그 회피)
+            fn_to_del = st.session_state.pop('_supplies_del', None)
+            if fn_to_del and not saved_df.empty and fn_to_del in saved_df['파일명'].values:
+                updated  = _delete_saved_file(saved_df, fn_to_del)
+                st.session_state['supplies_saved_df'] = updated
+                st.rerun()
+
             for fn in all_names:
                 is_saved = fn in saved_names
                 c_info, c_del = st.columns([9, 1])
@@ -372,10 +379,7 @@ def run_supplies_main():
                 with c_del:
                     if is_saved:
                         if st.button("🗑️", key=f"del_{fn}", help=f"'{fn}' 저장 데이터에서 삭제"):
-                            updated = _delete_saved_file(saved_df, fn)
-                            st.session_state['supplies_saved_df'] = updated
-                            saved_df = updated
-                            all_df   = _merge_and_sort(saved_df, new_df)
+                            st.session_state['_supplies_del'] = fn
                             st.rerun()
 
             # 신규 업로드 미리보기
