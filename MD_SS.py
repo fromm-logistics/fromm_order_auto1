@@ -484,10 +484,10 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
 
     mask_jp = intl['국가코드'] == 'JP'
     intl.loc[mask_jp, '도로명주소'] = (
-        intl.loc[mask_jp, '도로명주소'].fillna('') + ' ' +
-        intl.loc[mask_jp, '상세주소'].fillna('') + ' ' +
-        intl.loc[mask_jp, '도시'].fillna('') + ' ' +
-        intl.loc[mask_jp, '주'].fillna('')
+        intl.loc[mask_jp, '도로명주소'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '상세주소'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '도시'].fillna('').astype(str) + ' ' +
+        intl.loc[mask_jp, '주'].fillna('').astype(str)
     ).str.strip()
     intl.loc[mask_jp, ['상세주소', '주']] = ''
     intl.loc[mask_jp, ['도시']] = '.'
