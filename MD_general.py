@@ -96,7 +96,7 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
     intl['희망배송사'] = intl['국가코드'].map(
         # lambda c: 'sfexpress' if c == 'CN' else ('sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems'))
         # lambda c: 'ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems')
-        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems'))
+        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
     )
 
     intl['주'] = intl.apply(
