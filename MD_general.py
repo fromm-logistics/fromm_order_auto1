@@ -93,9 +93,11 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
 
     # 6) 국제 컬럼 보정
     # ⭐ [조건 반영] 국가코드별 희망배송사 매핑 조건 확장 규칙 적용
+
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'AR'] else 'ems')
+        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
     )
+
 
     intl['주'] = intl.apply(
         lambda r: r['국가명'] if pd.isna(r['주']) or str(r['주']).strip() == '' else r['주'], axis=1)
