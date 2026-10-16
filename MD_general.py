@@ -93,11 +93,9 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
 
     # 6) 국제 컬럼 보정
     # ⭐ [조건 반영] 국가코드별 희망배송사 매핑 조건 확장 규칙 적용
-
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
+        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
     )
-
 
     intl['주'] = intl.apply(
         lambda r: r['국가명'] if pd.isna(r['주']) or str(r['주']).strip() == '' else r['주'], axis=1)
@@ -113,8 +111,11 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
         intl.loc[mask_jp, '주'].fillna('').astype(str)
     ).str.strip()
 
-    intl.loc[mask_jp, ['상세주소', '주']] = ''
-    intl.loc[mask_jp, ['도시']] = '.'
+    for _col in ['상세주소', '주']:
+        intl[_col] = intl[_col].astype(str)
+        intl.loc[mask_jp, _col] = ''
+    intl['도시'] = intl['도시'].astype(str)
+    intl.loc[mask_jp, '도시'] = '.'
 
     # 7) 판매사 품주번호
     def gen(r,i):
