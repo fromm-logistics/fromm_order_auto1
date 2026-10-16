@@ -74,7 +74,7 @@ def run_logistics_simulator():
             key="back_to_main_from_logistics",
         )
     with col_help:
-        if st.button("📖 사용 방법", use_container_width=True):
+        if st.button("📖 사용 방법", width='stretch'):
             _show_usage()
     st.title("📊 물류비 시뮬레이터")
 
@@ -163,7 +163,7 @@ def run_logistics_simulator():
             st.info(f"🗑️ {before - len(df)}행 제거됨 → 남은 행: {len(df)}")
 
     st.markdown("### 미리보기 (상위 10행)")
-    st.dataframe(df.head(10), use_container_width=True)
+    st.dataframe(df.head(10), width='stretch')
     st.write(f"총 **{len(df)}행** / **{len(df.columns)}열**")
 
     # ── STEP 4: Google Sheets 업로드 ───────────────────
@@ -172,9 +172,9 @@ def run_logistics_simulator():
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        upload_clicked = st.button("📤 Google Sheets에 업로드", use_container_width=True)
+        upload_clicked = st.button("📤 Google Sheets에 업로드", width='stretch')
     with col2:
-        st.link_button("🔗 시트 열기", "https://docs.google.com/spreadsheets/d/1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg/edit?gid=700911321#gid=700911321", use_container_width=True)
+        st.link_button("🔗 시트 열기", "https://docs.google.com/spreadsheets/d/1QhlS0l83RwfE1xqiqaGGC_31hYN2_f6LleCFH2xw5Fg/edit?gid=700911321#gid=700911321", width='stretch')
     with col3:
         if '주문번호' in df.columns:
             import io
@@ -187,7 +187,7 @@ def run_logistics_simulator():
                 data=buf,
                 file_name="주문번호.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
+                width='stretch',
             )
 
     if upload_clicked:
