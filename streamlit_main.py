@@ -82,11 +82,11 @@ if st.session_state.page == 'main':
 
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.button("📀  앨범 나누기", on_click=to_album, use_container_width=True)
+        st.button("📀  앨범 나누기", on_click=to_album, width='stretch')
     with col2:
-        st.button("🛍️  MD 나누기", on_click=to_md_main, use_container_width=True)
+        st.button("🛍️  MD 나누기", on_click=to_md_main, width='stretch')
     with col3:
-        st.button("🃏  포토카드 개수", on_click=to_photocard_main, use_container_width=True)
+        st.button("🃏  포토카드 개수", on_click=to_photocard_main, width='stretch')
 
     st.markdown("""
 <div class="fromm-section-gap"></div>
@@ -96,7 +96,7 @@ if st.session_state.page == 'main':
 </div>
 """, unsafe_allow_html=True)
 
-    st.button("🧾  송장", on_click=to_invoice_main, use_container_width=True)
+    st.button("🧾  송장", on_click=to_invoice_main, width='stretch')
 
     st.markdown("""
 <div class="fromm-section-gap"></div>
@@ -106,7 +106,7 @@ if st.session_state.page == 'main':
 </div>
 """, unsafe_allow_html=True)
 
-    st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator, use_container_width=True)
+    st.button("📊  물류비 시뮬레이터", on_click=to_logistics_simulator, width='stretch')
 
     st.markdown("""
 <div class="fromm-section-gap"></div>
@@ -116,7 +116,7 @@ if st.session_state.page == 'main':
 </div>
 """, unsafe_allow_html=True)
 
-    st.button("📦  부자재 관리", on_click=to_supplies, use_container_width=True)
+    st.button("📦  부자재 관리", on_click=to_supplies, width='stretch')
 
 # 2. 송장
 elif st.session_state.page == 'invoice_main':
