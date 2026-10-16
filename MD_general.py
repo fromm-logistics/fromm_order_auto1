@@ -94,9 +94,7 @@ def _process_general(df: pd.DataFrame, weight_map: dict, box_limit: int):
     # 6) 국제 컬럼 보정
     # ⭐ [조건 반영] 국가코드별 희망배송사 매핑 조건 확장 규칙 적용
     intl['희망배송사'] = intl['국가코드'].map(
-        # lambda c: 'sfexpress' if c == 'CN' else ('sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems'))
-        # lambda c: 'ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE'] else 'ems')
-        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
+        lambda c: 'sagawa' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO'] else 'ems')
     )
 
     intl['주'] = intl.apply(
@@ -265,7 +263,7 @@ def run_md_general():
                     with cols[0]:
                         st.markdown(f"<div class='product-box'><div class='product-name'>{prod}</div>", unsafe_allow_html=True)
                         weight = st.number_input(
-                            label="무게",  # 빈 문자열 대신 의미 있는 텍스트 입력
+                            label="",
                             min_value=1,
                             value=saved_weights.get(prod, default_weight),
                             key=f"weight_{prod}",
@@ -305,14 +303,10 @@ def run_md_general():
         st.subheader("2️⃣ 가격 예측 및 카테고리 설정")
         def run_md_prediction():
             PRICE_TABLE_PATH = "가격테이블.xlsx"
-            @st.cache_data
-            def load_workbook_cached(file_bytes):
-                return pd.read_excel(io.BytesIO(file_bytes), sheet_name=None)
-
 
             xlsx_file = st.file_uploader("▶ Step1 결과물 업로드 (XLSX)", type=["xlsx"], key="xlsx_upload")
             if xlsx_file:
-                wb = load_workbook_cached(xlsx_file.getvalue())
+                wb = pd.read_excel(xlsx_file, sheet_name=None)
                 df_origin = wb['원본']
                 df_domestic = wb['국내']
                 df_stock = wb['재고_값']
@@ -501,6 +495,6 @@ def run_md_general():
                     st.success("예측 완료 ✅")
                     st.download_button("▶ 예측 결과 다운로드", output, file_name="예측결과.xlsx", mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                     st.subheader("📊 결과 값 요약")
-                    st.dataframe(prediction_summary.style.format(na_rep="-", precision=0), use_container_width=True)
+                    st.dataframe(prediction_summary.style.format(na_rep="-", precision=0), width='stretch')
 
         run_md_prediction()
