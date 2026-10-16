@@ -390,7 +390,7 @@ def run_supplies_main():
                 if preview.empty:
                     st.info("신규 파일에 수량 > 0인 항목이 없습니다.")
                 else:
-                    st.dataframe(_display_df(preview), use_container_width=True, hide_index=True)
+                    st.dataframe(_display_df(preview), width='stretch', hide_index=True)
 
     # ══════════════════════════════════════════════════════════
     # TAB 2: 대시보드 보기
@@ -436,7 +436,7 @@ def run_supplies_main():
             if filt.empty:
                 st.info("조건에 맞는 발주 내역이 없습니다.")
             else:
-                st.dataframe(_display_df(filt), use_container_width=True, hide_index=True)
+                st.dataframe(_display_df(filt), width='stretch', hide_index=True)
                 csv_bytes = (
                     filt[_DISPLAY_COLS]
                     .to_csv(index=False, encoding='utf-8-sig')
@@ -491,4 +491,4 @@ def run_supplies_main():
                 # 열 선택
                 item_agg = item_agg[['품명', '업체', '누적수량', '단가']]
 
-                st.dataframe(item_agg, use_container_width=True, hide_index=True)
+                st.dataframe(item_agg, width='stretch', hide_index=True)
