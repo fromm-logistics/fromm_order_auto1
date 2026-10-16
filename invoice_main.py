@@ -71,13 +71,13 @@ def run_invoice_main():
     st.markdown("### 1단계: 택배사를 선택하세요")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("다보내", use_container_width=True):
+        if st.button("다보내", width='stretch'):
             st.session_state.invoice_courier = "다보내"
             st.session_state.invoice_region = None
             st.session_state.df_result = None
             st.rerun()
     with col2:
-        if st.button("패스트박스", use_container_width=True):
+        if st.button("패스트박스", width='stretch'):
             st.session_state.invoice_courier = "패스트박스"
             st.session_state.invoice_region = None
             st.session_state.df_result = None
@@ -91,12 +91,12 @@ def run_invoice_main():
 
         col3, col4 = st.columns(2)
         with col3:
-            if st.button("국내", use_container_width=True):
+            if st.button("국내", width='stretch'):
                 st.session_state.invoice_region = "국내"
                 st.session_state.df_result = None
                 st.rerun()
         with col4:
-            if st.button("해외", use_container_width=True):
+            if st.button("해외", width='stretch'):
                 st.session_state.invoice_region = "해외"
                 st.session_state.df_result = None
                 st.rerun()
@@ -125,7 +125,7 @@ def run_invoice_main():
                     format_func=lambda x: "-- 선택하세요 --" if x == "" else x
                 )
 
-                if st.button("송장업로드 파일 변환 실행", use_container_width=True):
+                if st.button("송장업로드 파일 변환 실행", width='stretch'):
                     if not courier_input.strip():
                         st.error("⚠️ 배송사 이름을 먼저 입력한 후 변환을 실행해 주세요!")
                     else:
@@ -220,7 +220,7 @@ def run_invoice_main():
                 if st.session_state.df_result is not None:
                     st.write("---")
                     st.markdown("### 4단계: 변환된 파일 저장")
-                    st.dataframe(st.session_state.df_result, use_container_width=True)
+                    st.dataframe(st.session_state.df_result, width='stretch')
 
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_다보내_국내.csv"
@@ -252,7 +252,7 @@ def run_invoice_main():
                         data=csv_bytes,
                         file_name=file_name,
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
         elif st.session_state.invoice_courier == "패스트박스" and st.session_state.invoice_region == "국내":
             st.markdown("### 3단계: 파일 업로드 및 변환")
@@ -273,7 +273,7 @@ def run_invoice_main():
                     key="fastbox_courier_select"
                 )
 
-                if st.button("송장업로드 파일 변환 실행", use_container_width=True, key="fastbox_convert_btn"):
+                if st.button("송장업로드 파일 변환 실행", width='stretch', key="fastbox_convert_btn"):
                     if not courier_input.strip():
                         st.error("⚠️ 배송사 이름을 먼저 선택한 후 변환을 실행해 주세요!")
                     else:
@@ -322,7 +322,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "Wonderwall(해외)"]
+                                    df = df[df['판매처'] != "wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -361,7 +361,7 @@ def run_invoice_main():
                 if st.session_state.df_result is not None:
                     st.write("---")
                     st.markdown("### 4단계: 변환된 파일 저장")
-                    st.dataframe(st.session_state.df_result, use_container_width=True)
+                    st.dataframe(st.session_state.df_result, width='stretch')
 
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_패스트박스_국내.csv"
@@ -389,7 +389,7 @@ def run_invoice_main():
                         data=csv_bytes,
                         file_name=file_name,
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
         elif st.session_state.invoice_courier == "다보내" and st.session_state.invoice_region == "해외":
             st.markdown("### 3단계: 파일 업로드 및 변환")
@@ -402,7 +402,7 @@ def run_invoice_main():
             if uploaded_file is not None:
                 st.success(f"📂 {uploaded_file.name} 파일이 가져오기 완료되었습니다.")
 
-                if st.button("송장업로드 파일 변환 실행", use_container_width=True, key="dabonae_overseas_convert_btn"):
+                if st.button("송장업로드 파일 변환 실행", width='stretch', key="dabonae_overseas_convert_btn"):
                     try:
                         # CSV 읽기 (인코딩 자동 감지)
                         uploaded_file.seek(0)
@@ -469,7 +469,7 @@ def run_invoice_main():
                 if st.session_state.df_result is not None:
                     st.write("---")
                     st.markdown("### 4단계: 변환된 파일 저장")
-                    st.dataframe(st.session_state.df_result, use_container_width=True)
+                    st.dataframe(st.session_state.df_result, width='stretch')
 
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_다보내_해외.csv"
@@ -497,7 +497,7 @@ def run_invoice_main():
                         data=csv_bytes,
                         file_name=file_name,
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
         elif st.session_state.invoice_courier == "패스트박스" and st.session_state.invoice_region == "해외":
             st.markdown("### 3단계: 파일 업로드 및 변환")
@@ -516,7 +516,7 @@ def run_invoice_main():
                     key="fastbox_overseas_pw"
                 )
 
-                if st.button("송장업로드 파일 변환 실행", use_container_width=True, key="fastbox_overseas_btn"):
+                if st.button("송장업로드 파일 변환 실행", width='stretch', key="fastbox_overseas_btn"):
                     if not password_input.strip():
                         st.error("⚠️ 비밀번호를 입력해 주세요!")
                     else:
@@ -597,7 +597,7 @@ def run_invoice_main():
                                                 continue
                                             df_raw = df_raw[required]
 
-                                            # 3. '판매사 품주번호' 앞 7자리만 남기기
+                                            # 3. '판매사 품주번호' 앞 7자리 추출 후 숫자 7자리가 아닌 행 제거
                                             df_raw = df_raw.copy()
                                             df_raw['판매사 품주번호'] = df_raw['판매사 품주번호'].astype(str).str[:7]
                                             df_raw = df_raw[df_raw['판매사 품주번호'].str.match(r'^\d{7}$')]
@@ -662,7 +662,7 @@ def run_invoice_main():
                                 st.write(s)
                             for s in _skips:
                                 st.warning(f"⚠️ {s}")
-                    st.dataframe(st.session_state.df_result, use_container_width=True)
+                    st.dataframe(st.session_state.df_result, width='stretch')
 
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_패스트박스_해외.csv"
@@ -690,7 +690,7 @@ def run_invoice_main():
                         data=csv_bytes,
                         file_name=file_name,
                         mime="text/csv",
-                        use_container_width=True
+                        width='stretch'
                     )
         else:
             st.markdown("### 3단계: 파일을 업로드하세요")
