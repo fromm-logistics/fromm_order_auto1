@@ -322,7 +322,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "wonderwall(해외)"]
+                                    df = df[df['판매처'] != "Wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
