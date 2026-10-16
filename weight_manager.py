@@ -105,7 +105,7 @@ def run_weight_manager():
                         for _, row in df_csv.dropna().iterrows()
                         if str(row["무게(g)"]).isdigit()
                     }
-                    st.dataframe(df_csv, use_container_width=True)
+                    st.dataframe(df_csv, width='stretch')
                     if st.button(f"📤 {len(new_weights)}개 저장", key="wm_csv_save"):
                         if save_weights_bulk(new_weights):
                             st.success(f"{len(new_weights)}개 저장 완료")
