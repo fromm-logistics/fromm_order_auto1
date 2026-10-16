@@ -1,7 +1,7 @@
+# photocard_main.py
 import streamlit as st
 import pandas as pd
 import io
-import re
 from datetime import datetime
 
 
@@ -74,15 +74,9 @@ def run_photocard_main():
         if selected:
             st.write("---")
             st.markdown("### 3단계: 포토카드 종 수를 입력하세요")
-            card_counts = {}
-            for item in selected:
-                card_counts[item] = st.number_input(
-                    f"포토카드 종 수 - {item}",
-                    min_value=1, step=1, value=1,
-                    key=f"card_count_{item}"
-                )
+            card_count = st.number_input("포토카드 종 수", min_value=1, step=1, value=1)
 
-            if st.button("포토카드 수량 정리 실행", use_container_width=True):
+            if st.button("포토카드 수량 정리 실행", width='stretch'):
                 df_work = st.session_state.pc_df.copy()
 
                 # 1. '배송진행여부'에서 "cancelled" 행 삭제
@@ -107,8 +101,8 @@ def run_photocard_main():
                         pivot.columns = ['주문번호', '수량합계']
 
                         # 3. 세트 / 낱장 계산
-                        pivot['세트'] = pivot['수량합계'] // card_counts[item]
-                        pivot['낱장'] = pivot['수량합계'] % card_counts[item]
+                        pivot['세트'] = pivot['수량합계'] // card_count
+                        pivot['낱장'] = pivot['수량합계'] % card_count
 
                         # 4. 총합
                         results[item] = {
@@ -128,17 +122,19 @@ def run_photocard_main():
 
             for item, data in results.items():
                 st.markdown(f"#### 📦 {item}")
-                st.dataframe(data['pivot'], use_container_width=True)
-                st.code(
-                    f"세트: {data['total_set']:,}EA / 낱장: {data['total_loose']:,}EA / 총: {data['total_qty']:,}EA",
-                    language=None
+                st.dataframe(data['pivot'], width='stretch')
+                st.markdown(
+                    f"**세트: {data['total_set']}EA &nbsp;/&nbsp; "
+                    f"낱장: {data['total_loose']}EA &nbsp;/&nbsp; "
+                    f"총: {data['total_qty']}EA**",
+                    unsafe_allow_html=True
                 )
 
             # 5. 엑셀 다운로드 (재고명별 시트)
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 for item, data in results.items():
-                    sheet_name = re.sub(r'[\[\]:*?/\\]', '_', item)[:31]  # 엑셀 시트명 31자 제한
+                    sheet_name = item[:31]  # 엑셀 시트명 31자 제한
                     pivot = data['pivot'].copy()
                     total_row = pd.DataFrame([{
                         '주문번호': '합계',
@@ -156,5 +152,5 @@ def run_photocard_main():
                 data=buffer.getvalue(),
                 file_name=f"{today_str}_포토카드갯수.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True
+                width='stretch'
             )
