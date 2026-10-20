@@ -134,7 +134,8 @@ def run_photocard_main():
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
                 for item, data in results.items():
-                    sheet_name = item[:31]  # 엑셀 시트명 31자 제한
+                    import re
+                    sheet_name = re.sub(r'[\\/*?:\[\]]', '_', item)[:31]  # 엑셀 시트명 31자 + 금지문자 제거
                     pivot = data['pivot'].copy()
                     total_row = pd.DataFrame([{
                         '주문번호': '합계',
