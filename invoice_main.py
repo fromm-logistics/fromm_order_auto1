@@ -1,4 +1,3 @@
-# invoice_main.py
 import streamlit as st
 import pandas as pd
 from datetime import datetime
@@ -181,7 +180,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "프롬스토어(해외)" 행 삭제
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "프롬스토어(해외)"]
+                                    df = df[df['판매처'].astype(str).str.strip().str.lower() != "프롬스토어(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -225,10 +224,6 @@ def run_invoice_main():
                     today_str = datetime.today().strftime('%Y%m%d')
                     file_name = f"{today_str}_다보내_국내.csv"
 
-                    # 모든 값을 텍스트로 변환 후 CSV 저장
-                    # ① float 포맷 제거: 1395397.0 → 1395397
-                    # ② Excel 텍스트 강제 인식: ="값" 형식으로 감싸기
-                    #    (pandas to_csv는 "를 이중 이스케이프하므로 CSV를 직접 작성)
                     df_export = st.session_state.df_result.copy()
                     for col in df_export.columns:
                         if pd.api.types.is_numeric_dtype(df_export[col]):
@@ -320,9 +315,9 @@ def run_invoice_main():
                                 st.write(list(df.columns))
                                 st.dataframe(df.head(5))
                             else:
-                                # 1. '판매처'에서 "wonderwall(해외)" 행 삭제
+                                # 1. '판매처'에서 "wonderwall(해외)" 행 삭제 (대소문자 무관)
                                 if '판매처' in df.columns:
-                                    df = df[df['판매처'] != "Wonderwall(해외)"]
+                                   df['판매처'].astype(str).str.strip() != "Wonderwall(해외)"
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -560,9 +555,6 @@ def run_invoice_main():
                                             df_raw.columns = df_raw.columns.astype(str).str.strip()
 
                                             # 0. Sfexpress 전처리
-                                            #    '희망배송사' 값이 'sfexpress'(대소문자 무관)이면:
-                                            #    '해외배송송장번호' ← H열(index 7) 값으로 교체
-                                            #    '희망배송사' ← 'fastbox'로 교체
                                             if len(df_raw.columns) >= 8:
                                                 col_h = df_raw.columns[7]
                                                 _col_courier = '희망배송사' if '희망배송사' in df_raw.columns else df_raw.columns[3]
@@ -579,7 +571,6 @@ def run_invoice_main():
                                                 continue
 
                                             # NAN_ 형식, 순수 숫자(증정품), 빈값 행 제거
-                                            # (위치 기반 str[7]=='-' 대신 패턴 기반으로 변경)
                                             _sid = df_raw[col_id].astype(str).str.strip()
                                             df_raw = df_raw[
                                                 (_sid.str.len() > 0) &
@@ -587,7 +578,6 @@ def run_invoice_main():
                                                 (~_sid.str.upper().str.startswith('NAN_')) &
                                                 (~_sid.str.match(r'^\d{10,}$'))
                                             ]
-                                            rows_before = len(df_raw)
 
                                             # 2. 필요 열만 남기기
                                             required = ['판매사 품주번호', '희망배송사', '해외배송송장번호', '수량']
@@ -631,7 +621,6 @@ def run_invoice_main():
                             df_combined['amount'] = pd.to_numeric(
                                 df_combined['amount'], errors='coerce'
                             ).fillna(0).astype(int)
-                            # courier 소문자 보장 (최종 단계에서 한 번 더 적용)
                             df_combined['courier'] = df_combined['courier'].astype(str).str.lower().str.strip()
                             df_combined = df_combined.groupby(
                                 ['id', 'courier'], as_index=False
@@ -653,7 +642,6 @@ def run_invoice_main():
                 if st.session_state.df_result is not None:
                     st.write("---")
                     st.markdown("### 4단계: 변환된 파일 저장")
-                    # 파일별 처리 현황 표시
                     _stats = st.session_state.get('fb_file_stats', [])
                     _skips = st.session_state.get('fb_skip_log', [])
                     if _stats or _skips:
