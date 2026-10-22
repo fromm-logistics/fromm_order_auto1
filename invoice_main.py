@@ -197,6 +197,9 @@ def run_invoice_main():
                                 # 5. '복사_관리번호'에서 0이 아닌 값들은 행 삭제
                                 df = df[df['복사_관리번호'].astype(str).str.strip() == "0"]
 
+                                # 5-1. FB로 시작하는 송장번호(해외 주문) 제거 (이중 안전장치)
+                                df = df[~df['송장번호'].astype(str).str.startswith('FB')]
+
                                 # 6. '코드1'과 '송장번호' 중복값 제거 후 '주문수량' 합치기
                                 df['주문수량'] = pd.to_numeric(df['주문수량'], errors='coerce').fillna(0).astype(int)
                                 df = df.groupby(['코드1', '송장번호'], as_index=False)['주문수량'].sum()
@@ -317,7 +320,7 @@ def run_invoice_main():
                             else:
                                 # 1. '판매처'에서 "wonderwall(해외)" 행 삭제 (대소문자 무관)
                                 if '판매처' in df.columns:
-                                   df['판매처'].astype(str).str.strip() != "Wonderwall(해외)"
+                                    df = df[df['판매처'].astype(str).str.strip().str.lower() != "wonderwall(해외)"]
 
                                 # 2. '수령자주소'에 "YTO(노머스 대련CC)" 포함하는 행 삭제
                                 if '수령자주소' in df.columns:
@@ -333,6 +336,9 @@ def run_invoice_main():
 
                                 # 5. '복사_관리번호'에서 0이 아닌 값들은 행 삭제
                                 df = df[df['복사_관리번호'].astype(str).str.strip() == "0"]
+
+                                # 5-1. FB로 시작하는 송장번호(해외 주문) 제거 (이중 안전장치)
+                                df = df[~df['송장번호'].astype(str).str.startswith('FB')]
 
                                 # 6. '코드1'과 '송장번호' 중복값 제거 후 '주문수량' 합치기
                                 df['주문수량'] = pd.to_numeric(df['주문수량'], errors='coerce').fillna(0).astype(int)
