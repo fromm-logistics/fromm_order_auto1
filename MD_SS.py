@@ -380,7 +380,7 @@ def run_md_ss():
 
 
 def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
-    df = df.copy()
+    df = pd.DataFrame(df.to_dict('records'))
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
     df['상품금액'] = pd.to_numeric(df['상품금액'], errors='coerce').fillna(1).astype(float)
 
