@@ -318,6 +318,14 @@ def run_invoice_main():
                                 st.write(list(df.columns))
                                 st.dataframe(df.head(5))
                             else:
+                                # ── 디버그 ──
+                                st.write("📋 전체 행:", len(df))
+                                st.write("택배사 in columns:", '택배사' in df.columns)
+                                if '택배사' in df.columns:
+                                    st.write("택배사 값:", df['택배사'].unique().tolist())
+                                st.write("FB 송장 수:", df['송장번호'].astype(str).str.startswith('FB').sum())
+                                # ── 디버그 끝 ──
+
                                 # 1. '택배사'가 "패스트박스"인 행 삭제 (해외 주문)
                                 if '택배사' in df.columns:
                                     df = df[df['택배사'].astype(str).str.strip() != "패스트박스"]
