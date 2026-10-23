@@ -417,8 +417,8 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
         tp["[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"] = 1
 
     mask_500436 = df['재고코드'] == int(500436)
-    if mask_301392.any():
-        for _, row in df[mask_301392].iterrows():
+    if mask_500436.any():
+        for _, row in df[mask_500436].iterrows():
             new_row = row.copy()
             new_row['id'] = ""
             new_row['재고코드'] = "302245"
@@ -433,14 +433,14 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
         tp["[CAM 10CM_Chapter 1] 파우치 특전 포토카드"] = 1
 
     def assign_order_numbers(group):
-        total_w, suffix, out = 0, 1, []
+        total_w, suffix, out = 0.0, 1, []
         for _, row in group.iterrows():
-            weight = tp.get(row['재고명'], 0)
+            weight = float(tp.get(row['재고명'], 0) or 0)
             qty = int(row['수량'])
             while qty > 0:
                 if total_w + weight > limit:
-                    suffix, total_w = suffix + 1, 0
-                can = min(qty, (limit - total_w) // weight if weight > 0 else qty)
+                    suffix, total_w = suffix + 1, 0.0
+                can = min(qty, int((limit - total_w) // weight) if weight > 0 else qty)
                 nr = row.copy()
                 nr['수량'] = can
                 nr['주문번호'] = f"{row['주문번호']}-{suffix}"
