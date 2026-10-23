@@ -452,7 +452,12 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
     rows = []
     for _, grp in df.groupby('주문번호'):
         rows += assign_order_numbers(grp)
-    res = pd.DataFrame(rows)
+    
+    if not rows:
+        st.warning("처리 가능한 데이터가 없습니다.")
+        return io.BytesIO(), io.BytesIO(), io.BytesIO()
+    
+    res = pd.DataFrame(rows, columns=df.columns)
 
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
@@ -505,8 +510,11 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
         intl.loc[mask_jp, '도시'].fillna('').astype(str) + ' ' +
         intl.loc[mask_jp, '주'].fillna('').astype(str)
     ).str.strip()
-    intl.loc[mask_jp, ['상세주소', '주']] = ''
-    intl.loc[mask_jp, ['도시']] = '.'
+    for _col in ['상세주소', '주']:
+        intl[_col] = intl[_col].astype(str)
+        intl.loc[mask_jp, _col] = ''
+    intl['도시'] = intl['도시'].astype(str)
+    intl.loc[mask_jp, '도시'] = '.'
 
     buf_all = io.BytesIO()
     with pd.ExcelWriter(buf_all, engine="openpyxl") as w:
