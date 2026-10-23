@@ -397,7 +397,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품금액'] = 1.0
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
-            df.loc[len(df)] = new_row
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         tp["[이승윤 생일KIT] 컵홀더 2개입 OPP포장상품"] = 1
 
     mask_301392 = df['재고코드'] == int(301392)
@@ -413,7 +413,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품금액'] = 1.0
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
-            df.loc[len(df)] = new_row
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         tp["[온유 콘서트MD 퍼센트] 우양산 포토카드 (1종)"] = 1
 
     mask_500436 = df['재고코드'] == int(500436)
@@ -429,7 +429,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
             new_row['상품금액'] = 1.0
             new_row['결제통화'] = "USD"
             new_row['상품무게'] = 1
-            df.loc[len(df)] = new_row
+            df = pd.concat([df, pd.DataFrame([new_row])], ignore_index=True)
         tp["[CAM 10CM_Chapter 1] 파우치 특전 포토카드"] = 1
 
     def assign_order_numbers(group):
@@ -444,7 +444,7 @@ def _process_ss(df: pd.DataFrame, tp: dict, limit: int):
                 nr = row.copy()
                 nr['수량'] = can
                 nr['주문번호'] = f"{row['주문번호']}-{suffix}"
-                out.append(nr)
+                out.append(nr.to_dict())
                 total_w += can * weight
                 qty -= can
         return out
