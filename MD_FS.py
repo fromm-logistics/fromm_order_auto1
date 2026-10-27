@@ -182,7 +182,8 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
     res.loc[m, '결제통화'] = 'USD'
-    res.loc[m, '상품금액'] /= 1000
+    res['상품금액'] = res['상품금액'].astype(float)
+    res.loc[m, '상품금액'] = res.loc[m, '상품금액'] / 1000
     res['실결제금액'] = res['수량'] * res['상품금액']
     res = res[res['수량'] > 0].copy()
     res['상품명'] = res['재고명']
