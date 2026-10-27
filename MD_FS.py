@@ -153,7 +153,7 @@ def run_md_fs():
 # 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
 def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
-    df = df.copy()
+    df = pd.DataFrame(df.to_dict('records'))
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
 
     def assign_order_numbers(group):
