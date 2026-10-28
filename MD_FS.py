@@ -192,7 +192,7 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
     intl = res[res['국가코드'] != 'KR'].copy()
 
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sfexpress' if c == 'CN' else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
+        lambda c: 'sfexpress' if c in ('CN', 'HK', 'MO') else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
     )
 
     fromis_keywords = ["FROM OUR 20S", "프로미스나인"]
