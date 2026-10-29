@@ -261,14 +261,6 @@ def run_md_general():
             new_special = {}
 
             st.markdown("### 🧾 상품명과 무게 입력")
-            st.markdown("""<style>
-            .product-name {
-                font-size: 14px;
-                font-weight: 500;
-                margin-bottom: 2px;
-                word-break: break-word;
-            }
-            </style>""", unsafe_allow_html=True)
 
             for i, prod in enumerate(product_names):
                 try:
@@ -276,29 +268,29 @@ def run_md_general():
                 except Exception:
                     default_weight = 100
 
-                # 이전 rerun에서 toggle 상태 읽기 (toggle 클릭 시 rerun되므로 session_state에 이미 반영됨)
                 is_special = st.session_state.get(f"special_{prod}", saved_special.get(prod, False))
 
                 with st.container():
-                    c1, c2 = st.columns([5, 1])
-                    with c1:
-                        st.markdown(f"<div class='product-name'>{prod}</div>", unsafe_allow_html=True)
-                        weight = st.number_input(
-                            label="무게 (g)",
-                            min_value=1,
-                            value=saved_weights.get(prod, default_weight),
-                            key=f"weight_{prod}",
-                            disabled=is_special,
-                            label_visibility="collapsed"
-                        )
-                    with c2:
-                        st.markdown("**특전**")
+                    # 1행: 상품명(왼쪽) + 특전 토글(오른쪽)
+                    col_name, col_toggle = st.columns([4, 1])
+                    with col_name:
+                        st.markdown(f"**{prod}**")
+                    with col_toggle:
                         is_special = st.toggle(
                             label="특전",
                             value=is_special,
                             key=f"special_{prod}",
-                            label_visibility="collapsed"
                         )
+
+                    # 2행: 무게 입력 (특전이면 비활성화)
+                    weight = st.number_input(
+                        label="무게 (g)",
+                        min_value=1,
+                        value=saved_weights.get(prod, default_weight),
+                        key=f"weight_{prod}",
+                        disabled=is_special,
+                    )
+                    st.divider()
 
                     new_weights[prod] = weight
                     new_special[prod] = is_special
@@ -544,4 +536,3 @@ def run_md_general():
                     st.dataframe(prediction_summary.style.format(na_rep="-", precision=0), width='stretch')
 
         run_md_prediction()
-    
