@@ -147,7 +147,7 @@ def run_md_fs():
             with col_toggle:
                 is_special = st.toggle("특전", value=is_special, key=f"fs_sp_{prod}")
             new_special[prod] = is_special
-            st.divider()
+            st.markdown('<hr style="margin:2px 0;border:none;border-top:1px solid #333;">', unsafe_allow_html=True)
 
         st.session_state["fs_special_flags_fs"] = new_special
 
