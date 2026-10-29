@@ -180,10 +180,6 @@ def run_md_fs():
         today = datetime.datetime.now().strftime("%y%m%d")
         st.download_button("▶ 원본 시트 다운로드", st.session_state['fs_buf_all'],
                            file_name=f"FS_{today}_원본.xlsx")
-        st.download_button("▶ 국내 시트 다운로드", st.session_state['fs_buf_dom'],
-                           file_name=f"FS_{today}_국내.xlsx")
-        st.download_button("▶ 해외 시트 다운로드", st.session_state['fs_buf_int'],
-                           file_name=f"FS_{today}_해외.xlsx")
 
 
 # ───────────────────────────────────────────────────
