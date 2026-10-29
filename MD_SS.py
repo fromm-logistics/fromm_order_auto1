@@ -182,14 +182,6 @@ def run_md_ss():
             st.session_state['SS_buf_all'],
             file_name=f"SS_{today}_원본.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        st.download_button("▶ 국내 시트만 다운로드",
-            st.session_state['SS_buf_dom'],
-            file_name=f"SS_{today}_국내.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-        st.download_button("▶ 해외 시트만 다운로드",
-            st.session_state['SS_buf_int'],
-            file_name=f"SS_{today}_해외.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
 
 def _process_ss(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None):
