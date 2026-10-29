@@ -140,6 +140,17 @@ def run_md_fs():
         st.markdown("### 🎁 특전 상품 설정")
         st.caption("특전으로 지정된 재고는 무게 계산에서 제외되며, 각 주문의 마지막 박스 번호에 포함됩니다.")
 
+        def _fs_toggle_all():
+            val = st.session_state["fs_master_toggle"]
+            for p in product_names:
+                st.session_state[f"fs_sp_{p}"] = val
+
+        _, col_master_toggle = st.columns([4, 1])
+        with col_master_toggle:
+            st.toggle("전체 특전", key="fs_master_toggle",
+                      on_change=_fs_toggle_all)
+        st.markdown('<hr style="margin:4px 0;border:none;border-top:2px solid #555;">', unsafe_allow_html=True)
+
         for prod in product_names:
             is_special = st.session_state.get(f"fs_sp_{prod}", saved_special.get(prod, False))
             col_name, col_toggle = st.columns([4, 1])
