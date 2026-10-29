@@ -145,12 +145,10 @@ def run_md_ss():
                 for p in product_names:
                     st.session_state[f"ss_sp_{p}"] = val
 
-            col_master_name, col_master_toggle = st.columns([4, 1])
-            with col_master_name:
-                st.markdown("**전체 특전**")
+            _, col_master_toggle = st.columns([4, 1])
             with col_master_toggle:
                 st.toggle("전체 특전", key="ss_master_toggle",
-                          on_change=_ss_toggle_all, label_visibility="collapsed")
+                          on_change=_ss_toggle_all)
             st.markdown('<hr style="margin:4px 0;border:none;border-top:2px solid #555;">', unsafe_allow_html=True)
 
             for prod in product_names:
