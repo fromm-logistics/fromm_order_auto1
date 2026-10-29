@@ -290,7 +290,7 @@ def run_md_general():
                         key=f"weight_{prod}",
                         disabled=is_special,
                     )
-                    st.divider()
+                    st.markdown('<hr style="margin:2px 0;border:none;border-top:1px solid #333;">', unsafe_allow_html=True)
 
                     new_weights[prod] = weight
                     new_special[prod] = is_special
@@ -319,14 +319,6 @@ def run_md_general():
             st.download_button("▶ 원본 시트 다운로드",
                 st.session_state['fs_buf_all'],
                 file_name=f"일반상품_{today}_원본.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            st.download_button("▶ 국내 시트만 다운로드",
-                st.session_state['fs_buf_dom'],
-                file_name=f"일반상품_{today}_국내.xlsx",
-                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-            st.download_button("▶ 해외 시트만 다운로드",
-                st.session_state['fs_buf_int'],
-                file_name=f"일반상품_{today}_해외.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
 
     elif st.session_state.step == 2:
