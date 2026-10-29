@@ -132,7 +132,8 @@ def run_md_fs():
 
     # ── 특전 토글 UI (missing 없을 때만 표시) ──
     if df is not None and not missing:
-        product_names = sorted(df['재고명'].dropna().unique())
+        _price = pd.to_numeric(df['상품금액'], errors='coerce').fillna(0)
+        product_names = sorted(df.loc[_price.isin([0, 1]), '재고명'].dropna().unique())
         saved_special = st.session_state.get("fs_special_flags_fs", {})
         new_special = {}
 
