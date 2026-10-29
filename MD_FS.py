@@ -1,4 +1,3 @@
-# MD_FS.py
 import streamlit as st
 import pandas as pd
 import io, re, random
@@ -12,7 +11,7 @@ from weight_db import load_weights, inject_floating_weight_btn  # ← 구글 시
 #    – 기본 target_products(재고명→무게 매핑) — 시트에 없는 경우 폴백
 #    – box_limit(박스 최대 용량)
 # ───────────────────────────────────────────────────
-target_products={}
+target_products = {}
 box_limit = 15000  # 기본 박스 최대 용량
 
 exclude_products = [
@@ -131,9 +130,35 @@ def run_md_fs():
         else:
             st.success("모든 재고명이 무게 DB에 포함됩니다.")
 
+    # ── 특전 토글 UI (missing 없을 때만 표시) ──
+    if df is not None and not missing:
+        product_names = sorted(df['재고명'].dropna().unique())
+        saved_special = st.session_state.get("fs_special_flags_fs", {})
+        new_special = {}
+
+        st.markdown("### 🎁 특전 상품 설정")
+        st.caption("특전으로 지정된 재고는 무게 계산에서 제외되며, 각 주문의 마지막 박스 번호에 포함됩니다.")
+
+        for prod in product_names:
+            is_special = st.session_state.get(f"fs_sp_{prod}", saved_special.get(prod, False))
+            col_name, col_toggle = st.columns([4, 1])
+            with col_name:
+                st.markdown(f"**{prod}**")
+            with col_toggle:
+                is_special = st.toggle("특전", value=is_special, key=f"fs_sp_{prod}")
+            new_special[prod] = is_special
+            st.divider()
+
+        st.session_state["fs_special_flags_fs"] = new_special
+
+        special_count = sum(1 for v in new_special.values() if v)
+        if special_count:
+            st.info(f"📌 특전 재고 {special_count}개 — 각 주문의 마지막 박스 번호에 합산됩니다.")
+
     if df is not None and st.button("✅ 실행", disabled=bool(missing)):
-        merged_tp = effective_tp
-        buf_all, buf_dom, buf_int = _process_fs(df, merged_tp, box_limit)
+        special_flags = st.session_state.get('fs_special_flags_fs', {})
+        special_set = {prod for prod, flag in special_flags.items() if flag}
+        buf_all, buf_dom, buf_int = _process_fs(df, effective_tp, box_limit, special_set=special_set)
         st.session_state['fs_buf_all'] = buf_all.getvalue()
         st.session_state['fs_buf_dom'] = buf_dom.getvalue()
         st.session_state['fs_buf_int'] = buf_int.getvalue()
@@ -152,33 +177,57 @@ def run_md_fs():
 # ───────────────────────────────────────────────────
 # 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
-def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
+def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None):
+    if special_set is None:
+        special_set = set()
+
     df = pd.DataFrame(df.to_dict('records'))
     df['수량'] = pd.to_numeric(df['수량'], errors='coerce').fillna(0).astype(int)
+    df['상품금액'] = pd.to_numeric(df['상품금액'], errors='coerce').fillna(1).astype(float)
 
     def assign_order_numbers(group):
-        total_w, suffix, out = 0, 1, []
+        total_w, suffix, out = 0.0, 1, []
+        special_rows = []
+        base_order_no = group['주문번호'].iloc[0]
+
         for _, row in group.iterrows():
-            weight = tp.get(row['재고명'], 0)
+            if row['재고명'] in special_set:
+                special_rows.append(row.copy())
+                continue
+
+            weight = float(tp.get(row['재고명'], 0) or 0)
             qty = int(row['수량'])
             while qty > 0:
                 if total_w + weight > limit:
                     suffix += 1
-                    total_w = 0
-                can = min(qty, (limit - total_w) // weight if weight > 0 else qty)
+                    total_w = 0.0
+                can = min(qty, int((limit - total_w) // weight) if weight > 0 else qty)
                 nr = row.copy()
                 nr['수량'] = can
-                nr['주문번호'] = f"{row['주문번호']}-{suffix}"
-                out.append(nr)
+                nr['주문번호'] = f"{base_order_no}-{suffix}"
+                out.append(nr.to_dict())
                 total_w += can * weight
                 qty -= can
+
+        # 특전 → 마지막 박스 번호에 추가
+        for row in special_rows:
+            nr = row.copy()
+            nr['주문번호'] = f"{base_order_no}-{suffix}"
+            out.append(nr.to_dict())
+
         return out
 
     rows = []
     for _, grp in df.groupby('주문번호'):
         rows += assign_order_numbers(grp)
-    res = pd.DataFrame(rows)
 
+    if not rows:
+        st.warning("처리 가능한 데이터가 없습니다.")
+        return io.BytesIO(), io.BytesIO(), io.BytesIO()
+
+    res = pd.DataFrame(rows, columns=df.columns)
+
+    res['상품금액'] = pd.to_numeric(res['상품금액'], errors='coerce').fillna(1).astype(float)
     res['상품금액'] = res['상품금액'].replace(0, 1)
     m = (res['국가코드'] != 'KR') & (res['결제통화'] == 'KRW')
     res.loc[m, '결제통화'] = 'USD'
@@ -192,7 +241,11 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int):
     intl = res[res['국가코드'] != 'KR'].copy()
 
     intl['희망배송사'] = intl['국가코드'].map(
-        lambda c: 'sfexpress' if c in ('CN', 'HK', 'MO') else ('ems' if c == 'JP' else ('emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'))
+        lambda c: 'sfexpress' if c in ('CN', 'HK', 'MO') else (
+            'ems' if c == 'JP' else (
+                'emspremium' if c in ['US', 'IT', 'CO', 'RO', 'DE', 'NL', 'SE', 'AR'] else 'ems'
+            )
+        )
     )
 
     fromis_keywords = ["FROM OUR 20S", "프로미스나인"]
