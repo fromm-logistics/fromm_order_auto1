@@ -221,23 +221,34 @@ def run_md_fs():
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 재고 선택")
                 _df_num = pd.DataFrame(df.to_dict('records'))
                 _price = pd.to_numeric(_df_num['상품금액'], errors='coerce').fillna(0)
-                poka_products = sorted(_df_num.loc[_price != 0, '재고명'].dropna().unique())
+                all_products = sorted(_df_num.loc[_price != 0, '재고명'].dropna().unique())
 
-                saved_selected = set(st.session_state.get('fs_poka_selected', []))
-                new_selected = []
+                # 이전 라운드에서 이미 선택된 재고 제외
+                already_used = set()
+                for _cfg in st.session_state.get('fs_poka_configs', []):
+                    already_used.update(_cfg.get('selected', []))
+                poka_products = [p for p in all_products if p not in already_used]
 
-                st.markdown("##### 재고명 선택")
-                for prod in poka_products:
-                    checked = st.checkbox(prod, value=(prod in saved_selected), key=f"fs_chk_{round_no}_{prod}")
-                    if checked:
-                        new_selected.append(prod)
+                if not poka_products:
+                    st.info("선택 가능한 재고가 없습니다. 모든 재고가 이전 라운드에서 선택되었습니다.")
+                else:
+                    saved_selected = set(st.session_state.get('fs_poka_selected', []))
+                    new_selected = []
 
-                st.session_state['fs_poka_selected'] = new_selected
+                    st.markdown("##### 재고명 선택")
+                    if already_used:
+                        st.caption(f"✅ 이전 라운드에서 선택된 재고 {len(already_used)}개 제외됨")
+                    for prod in poka_products:
+                        checked = st.checkbox(prod, value=(prod in saved_selected), key=f"fs_chk_{round_no}_{prod}")
+                        if checked:
+                            new_selected.append(prod)
 
-                if new_selected and st.button("다음 →", key="fs_poka_next1"):
-                    st.session_state['fs_poka_step'] = 2
-                    st.session_state['fs_poka_scroll'] = True
-                    st.rerun()
+                    st.session_state['fs_poka_selected'] = new_selected
+
+                    if new_selected and st.button("다음 →", key="fs_poka_next1"):
+                        st.session_state['fs_poka_step'] = 2
+                        st.session_state['fs_poka_scroll'] = True
+                        st.rerun()
 
             # ── Step 2: 환율(일괄) + 주문별 총액 + 금액 기준 + 상품정보 + 실행 ──
             elif poka_step == 2:
@@ -271,7 +282,7 @@ def run_md_fs():
                 def calc_amount(row, _sel=selected, _rate=rate):
                     if row['결제통화'] == 'USD' and row['재고명'] in _sel:
                         return row['상품금액'] * row['수량'] * _rate
-                    elif row['결제통화'] == 'KRW':
+                    elif row['결제통화'] == 'KRW' and row['재고명'] in _sel:
                         return row['상품금액'] * row['수량']
                     return 0
 
@@ -472,7 +483,7 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
             def _bc_amount(row, sel=_bc_sel, rate=_bc_rate):
                 if row['결제통화'] == 'USD' and row['재고명'] in sel:
                     return row['상품금액'] * row['수량'] * rate
-                elif row['결제통화'] == 'KRW':
+                elif row['결제통화'] == 'KRW' and row['재고명'] in sel:
                     return row['상품금액'] * row['수량']
                 return 0
 
