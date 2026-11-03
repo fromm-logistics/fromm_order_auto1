@@ -185,8 +185,18 @@ def run_md_fs():
                 if st.button("💰 금액별 포카 추가"):
                     st.session_state['fs_poka_mode'] = True
                     st.session_state['fs_poka_step'] = 1
+                    st.session_state['fs_poka_scroll'] = True
                     st.rerun()
         else:
+            # 방금 포카 버튼을 눌러 진입했을 때 자동 스크롤
+            if st.session_state.pop('fs_poka_scroll', False):
+                import streamlit.components.v1 as _stc
+                _stc.html(
+                    "<script>window.parent.document.querySelector"
+                    "('section.main').scrollTo({top:99999,behavior:'smooth'});</script>",
+                    height=0
+                )
+
             poka_step = st.session_state.get('fs_poka_step', 1)
 
             if st.button("← 취소", key="fs_poka_cancel"):
