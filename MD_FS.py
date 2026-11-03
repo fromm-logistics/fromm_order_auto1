@@ -296,14 +296,10 @@ def run_md_fs():
                 # ── 포카 상품 정보 입력 ──
                 st.markdown("---")
                 st.markdown("##### 📝 추가할 포카 상품 정보 입력")
-                bonus_pname  = st.text_input("상품명",  value=st.session_state.get(f'fs_bonus_pname_{round_no}', ''),  key=f"fs_bonus_pname_{round_no}")
-                bonus_option = st.text_input("옵션명",  value=st.session_state.get(f'fs_bonus_option_{round_no}', ''), key=f"fs_bonus_option_{round_no}")
-                bonus_jname  = st.text_input("재고명",  value=st.session_state.get(f'fs_bonus_jname_{round_no}', ''),  key=f"fs_bonus_jname_{round_no}")
-                bonus_jcode  = st.text_input("재고코드", value=st.session_state.get(f'fs_bonus_jcode_{round_no}', ''),  key=f"fs_bonus_jcode_{round_no}")
-                st.session_state[f'fs_bonus_pname_{round_no}']  = bonus_pname
-                st.session_state[f'fs_bonus_option_{round_no}'] = bonus_option
-                st.session_state[f'fs_bonus_jname_{round_no}']  = bonus_jname
-                st.session_state[f'fs_bonus_jcode_{round_no}']  = bonus_jcode
+                bonus_pname  = st.text_input("상품명",  key=f"fs_bonus_pname_{round_no}")
+                bonus_option = st.text_input("옵션명",  key=f"fs_bonus_option_{round_no}")
+                bonus_jname  = st.text_input("재고명",  key=f"fs_bonus_jname_{round_no}")
+                bonus_jcode  = st.text_input("재고코드", key=f"fs_bonus_jcode_{round_no}")
 
                 all_filled = bool(bonus_pname and bonus_option and bonus_jname and bonus_jcode)
 
