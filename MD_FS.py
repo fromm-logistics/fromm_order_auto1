@@ -212,8 +212,10 @@ def run_md_fs():
                 if st.session_state.pop('fs_poka_scroll', False):
                     import streamlit.components.v1 as _stc
                     _stc.html(
-                        "<script>window.parent.document.querySelector"
-                        "('section.main').scrollTo({top:0,behavior:'smooth'});</script>",
+                        "<script>setTimeout(function(){"
+                        "var el=window.parent.document.getElementById('stMain');"
+                        "if(el)el.scrollTo({top:0,behavior:'smooth'});"
+                        "},80);</script>",
                         height=0
                     )
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 재고 선택")
@@ -243,8 +245,10 @@ def run_md_fs():
                 if st.session_state.pop('fs_poka_scroll', False):
                     import streamlit.components.v1 as _stc
                     _stc.html(
-                        "<script>window.parent.document.querySelector"
-                        "('section.main').scrollTo({top:0,behavior:'smooth'});</script>",
+                        "<script>setTimeout(function(){"
+                        "var el=window.parent.document.getElementById('stMain');"
+                        "if(el)el.scrollTo({top:0,behavior:'smooth'});"
+                        "},80);</script>",
                         height=0
                     )
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 설정")
