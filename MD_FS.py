@@ -321,28 +321,6 @@ def run_md_fs():
 
                 all_filled = bool(bonus_pname and bonus_option and bonus_jname and bonus_jcode)
 
-                # 현재 라운드 값을 즉시 캡처 (클로저 아닌 값 고정)
-                _cur_selected = list(selected)
-                _cur_rate     = int(rate)
-                _cur_base     = int(base)
-                _cur_cap      = int(cap) if cap is not None else None
-                _cur_pname    = str(bonus_pname)
-                _cur_option   = str(bonus_option)
-                _cur_jname    = str(bonus_jname)
-                _cur_jcode    = str(bonus_jcode)
-
-                def _build_current_config():
-                    return {
-                        'selected': _cur_selected,
-                        'rate':     _cur_rate,
-                        'base':     _cur_base,
-                        'cap':      _cur_cap,
-                        '상품명':   _cur_pname,
-                        '옵션명':   _cur_option,
-                        '재고명':   _cur_jname,
-                        '재고코드': _cur_jcode,
-                    }
-
                 col_prev, col_more, col_exec = st.columns([1, 2, 2])
                 with col_prev:
                     if st.button("← 이전", key="fs_poka_prev"):
@@ -350,17 +328,42 @@ def run_md_fs():
                         st.rerun()
                 with col_more:
                     if st.button("➕ 포카 1번 더 추가하기", disabled=not all_filled, key="fs_poka_more"):
-                        configs = st.session_state.get('fs_poka_configs', [])
-                        configs.append(_build_current_config())
-                        st.session_state['fs_poka_configs'] = configs
-                        # 다음 라운드 초기화
+                        new_cfg = {
+                            'selected': list(selected),
+                            'rate':     int(st.session_state.get(f"fs_poka_rate_input_{round_no}", rate)),
+                            'base':     int(st.session_state.get(f"fs_poka_base_input_{round_no}", base)),
+                            'cap':      (int(st.session_state[f"fs_poka_cap_input_{round_no}"])
+                                         if st.session_state.get(f"fs_poka_limit_radio_{round_no}") == "제한"
+                                            and f"fs_poka_cap_input_{round_no}" in st.session_state
+                                         else None),
+                            '상품명':   str(st.session_state.get(f"fs_bonus_pname_{round_no}", bonus_pname)),
+                            '옵션명':   str(st.session_state.get(f"fs_bonus_option_{round_no}", bonus_option)),
+                            '재고명':   str(st.session_state.get(f"fs_bonus_jname_{round_no}", bonus_jname)),
+                            '재고코드': str(st.session_state.get(f"fs_bonus_jcode_{round_no}", bonus_jcode)),
+                        }
+                        prev = list(st.session_state.get('fs_poka_configs', []))
+                        prev.append(new_cfg)
+                        st.session_state['fs_poka_configs'] = prev
                         st.session_state['fs_poka_step'] = 1
                         st.session_state['fs_poka_selected'] = []
                         st.rerun()
                 with col_exec:
                     if st.button("✅ 실행", disabled=not all_filled, key="fs_poka_run"):
-                        configs = st.session_state.get('fs_poka_configs', [])
-                        configs.append(_build_current_config())
+                        new_cfg = {
+                            'selected': list(selected),
+                            'rate':     int(st.session_state.get(f"fs_poka_rate_input_{round_no}", rate)),
+                            'base':     int(st.session_state.get(f"fs_poka_base_input_{round_no}", base)),
+                            'cap':      (int(st.session_state[f"fs_poka_cap_input_{round_no}"])
+                                         if st.session_state.get(f"fs_poka_limit_radio_{round_no}") == "제한"
+                                            and f"fs_poka_cap_input_{round_no}" in st.session_state
+                                         else None),
+                            '상품명':   str(st.session_state.get(f"fs_bonus_pname_{round_no}", bonus_pname)),
+                            '옵션명':   str(st.session_state.get(f"fs_bonus_option_{round_no}", bonus_option)),
+                            '재고명':   str(st.session_state.get(f"fs_bonus_jname_{round_no}", bonus_jname)),
+                            '재고코드': str(st.session_state.get(f"fs_bonus_jcode_{round_no}", bonus_jcode)),
+                        }
+                        configs = list(st.session_state.get('fs_poka_configs', []))
+                        configs.append(new_cfg)
                         special_flags = st.session_state.get('fs_special_flags_fs', {})
                         special_set = {p for p, f in special_flags.items() if f}
                         buf_all, buf_dom, buf_int = _process_fs(
@@ -452,13 +455,21 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
         _df_orig['수량'] = pd.to_numeric(_df_orig['수량'], errors='coerce').fillna(0).astype(int)
         _df_orig['상품금액'] = pd.to_numeric(_df_orig['상품금액'], errors='coerce').fillna(0).astype(float)
 
-        for bonus_config in bonus_configs:
-            _bc_selected = bonus_config['selected']
-            _bc_rate     = bonus_config['rate']   # 단일 환율
-            _bc_base     = bonus_config['base']
-            _bc_cap      = bonus_config.get('cap', None)
+        # 원본 res 스냅샷 — 라운드 간 bonus row 혼입 방지
+        res_snap = res.copy()
+        all_bonus_rows = []
 
-            def _bc_amount(row, sel=_bc_selected, rate=_bc_rate):
+        for bc in bonus_configs:
+            _bc_sel  = list(bc['selected'])
+            _bc_rate = float(bc['rate'])
+            _bc_base = int(bc['base'])
+            _bc_cap  = int(bc['cap']) if bc.get('cap') is not None else None
+            _bc_pname  = str(bc['상품명'])
+            _bc_option = str(bc['옵션명'])
+            _bc_jname  = str(bc['재고명'])
+            _bc_jcode  = str(bc['재고코드'])
+
+            def _bc_amount(row, sel=_bc_sel, rate=_bc_rate):
                 if row['결제통화'] == 'USD' and row['재고명'] in sel:
                     return row['상품금액'] * row['수량'] * rate
                 elif row['결제통화'] == 'KRW':
@@ -468,33 +479,33 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
             _df_orig['_금액'] = _df_orig.apply(_bc_amount, axis=1)
             _order_totals = _df_orig.groupby('주문번호')['_금액'].sum()
 
-            bonus_rows = []
             for orig_no, total in _order_totals.items():
                 qty = int(total // _bc_base)
                 if _bc_cap is not None:
                     qty = min(qty, _bc_cap)
                 if qty <= 0:
                     continue
+                # 원본 스냅샷에서만 템플릿 탐색 → 이전 라운드 bonus row 혼입 없음
                 mask = (
-                    res['주문번호'].str.startswith(str(orig_no) + '-') &
-                    res['재고명'].isin(_bc_selected)
+                    res_snap['주문번호'].str.startswith(str(orig_no) + '-') &
+                    res_snap['재고명'].isin(_bc_sel)
                 )
                 if not mask.any():
                     continue
-                tmpl = res[mask].iloc[0].copy()
-                tmpl['상품명']   = bonus_config['상품명']
-                tmpl['옵션명']   = bonus_config['옵션명']
-                tmpl['재고명']   = bonus_config['재고명']
-                tmpl['재고코드'] = bonus_config['재고코드']
+                tmpl = res_snap[mask].iloc[0].copy()
+                tmpl['상품명']   = _bc_pname
+                tmpl['옵션명']   = _bc_option
+                tmpl['재고명']   = _bc_jname
+                tmpl['재고코드'] = _bc_jcode
                 tmpl['수량']     = qty
                 tmpl['상품무게'] = 1
                 tmpl['상품금액'] = 1
                 tmpl['실결제금액'] = qty
                 tmpl['id']       = ''
-                bonus_rows.append(tmpl.to_dict())
+                all_bonus_rows.append(tmpl.to_dict())
 
-            if bonus_rows:
-                res = pd.concat([res, pd.DataFrame(bonus_rows, columns=res.columns)], ignore_index=True)
+        if all_bonus_rows:
+            res = pd.concat([res, pd.DataFrame(all_bonus_rows, columns=res.columns)], ignore_index=True)
 
     dom = res[res['국가코드'] == 'KR'].copy()
     intl = res[res['국가코드'] != 'KR'].copy()
