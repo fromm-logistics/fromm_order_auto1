@@ -188,14 +188,6 @@ def run_md_fs():
                     st.session_state['fs_poka_scroll'] = True
                     st.rerun()
         else:
-            # 방금 포카 버튼을 눌러 진입했을 때 자동 스크롤
-            if st.session_state.pop('fs_poka_scroll', False):
-                import streamlit.components.v1 as _stc
-                _stc.html(
-                    "<script>window.parent.document.querySelector"
-                    "('section.main').scrollTo({top:99999,behavior:'smooth'});</script>",
-                    height=0
-                )
 
             poka_step = st.session_state.get('fs_poka_step', 1)
 
@@ -216,6 +208,14 @@ def run_md_fs():
 
             # ── Step 1: 재고 체크박스 선택 ──
             if poka_step == 1:
+                # Step 1 진입 시 상단으로 스크롤
+                if st.session_state.pop('fs_poka_scroll', False):
+                    import streamlit.components.v1 as _stc
+                    _stc.html(
+                        "<script>window.parent.document.querySelector"
+                        "('section.main').scrollTo({top:0,behavior:'smooth'});</script>",
+                        height=0
+                    )
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 재고 선택")
                 _df_num = pd.DataFrame(df.to_dict('records'))
                 _price = pd.to_numeric(_df_num['상품금액'], errors='coerce').fillna(0)
@@ -234,10 +234,19 @@ def run_md_fs():
 
                 if new_selected and st.button("다음 →", key="fs_poka_next1"):
                     st.session_state['fs_poka_step'] = 2
+                    st.session_state['fs_poka_scroll'] = True
                     st.rerun()
 
             # ── Step 2: 환율(일괄) + 주문별 총액 + 금액 기준 + 상품정보 + 실행 ──
             elif poka_step == 2:
+                # Step 2 진입 시 상단으로 스크롤
+                if st.session_state.pop('fs_poka_scroll', False):
+                    import streamlit.components.v1 as _stc
+                    _stc.html(
+                        "<script>window.parent.document.querySelector"
+                        "('section.main').scrollTo({top:0,behavior:'smooth'});</script>",
+                        height=0
+                    )
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 설정")
 
                 selected = list(st.session_state.get('fs_poka_selected', []))
