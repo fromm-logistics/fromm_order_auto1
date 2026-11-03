@@ -443,6 +443,7 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
             tmpl['상품무게'] = 1
             tmpl['상품금액'] = 1
             tmpl['실결제금액'] = qty
+            tmpl['id']      = ''
             bonus_rows.append(tmpl.to_dict())
 
         if bonus_rows:
@@ -490,6 +491,18 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
             return f"{s[:3]}-{s[3:7]}-{s[7:]}"
         return s
     dom['전화번호'] = dom['전화번호'].apply(fmt)
+
+    # ── 정렬: 주문일시 → id → 주문번호 오름차순 ──
+    _sort_cols = [c for c in ['주문일시', 'id', '주문번호'] if c in df.columns]
+    def _sort_df(d):
+        sc = [c for c in ['주문일시', 'id', '주문번호'] if c in d.columns]
+        if not sc:
+            return d
+        return d.sort_values(sc, ascending=True, na_position='last').reset_index(drop=True)
+
+    df   = _sort_df(df)
+    dom  = _sort_df(dom)
+    intl = _sort_df(intl)
 
     buf_all = io.BytesIO()
     buf_dom = io.BytesIO()
