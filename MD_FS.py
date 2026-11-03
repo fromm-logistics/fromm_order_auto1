@@ -194,52 +194,61 @@ def run_md_fs():
                 st.session_state.pop('fs_poka_step', None)
                 st.rerun()
 
-            # ── Step 1: 재고 체크박스 선택 + 환율 입력 ──
+            round_no = len(st.session_state.get('fs_poka_configs', [])) + 1
+
+            # ── 완료된 라운드 요약 ──
+            completed = st.session_state.get('fs_poka_configs', [])
+            if completed:
+                st.markdown("##### ✅ 완료된 포카 설정")
+                for i, cfg in enumerate(completed, 1):
+                    cap_str = str(cfg['cap']) if cfg.get('cap') is not None else '무제한'
+                    st.info(f"라운드 {i} | 재고명: **{cfg['재고명']}** | 기준: {cfg['base']:,}원 | 최대: {cap_str}")
+
+            # ── Step 1: 재고 체크박스 선택 ──
             if poka_step == 1:
-                st.markdown("### 💰 금액별 포카 추가 — 재고 선택")
+                st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 재고 선택")
                 _df_num = pd.DataFrame(df.to_dict('records'))
                 _price = pd.to_numeric(_df_num['상품금액'], errors='coerce').fillna(0)
                 poka_products = sorted(_df_num.loc[_price != 0, '재고명'].dropna().unique())
 
                 saved_selected = set(st.session_state.get('fs_poka_selected', []))
-                saved_rates = st.session_state.get('fs_poka_rates', {})
                 new_selected = []
-                new_rates = {}
 
-                st.markdown("##### 재고명 선택 및 환율 입력")
+                st.markdown("##### 재고명 선택")
                 for prod in poka_products:
-                    checked = st.checkbox(prod, value=(prod in saved_selected), key=f"fs_chk_{prod}")
+                    checked = st.checkbox(prod, value=(prod in saved_selected), key=f"fs_chk_{round_no}_{prod}")
                     if checked:
                         new_selected.append(prod)
-                        new_rates[prod] = st.number_input(
-                            f"환율 — {prod}",
-                            min_value=1,
-                            value=saved_rates.get(prod, 1000),
-                            key=f"fs_rate_{prod}",
-                            label_visibility="collapsed"
-                        )
 
                 st.session_state['fs_poka_selected'] = new_selected
-                st.session_state['fs_poka_rates'] = new_rates
 
                 if new_selected and st.button("다음 →", key="fs_poka_next1"):
                     st.session_state['fs_poka_step'] = 2
                     st.rerun()
 
-            # ── Step 2: 주문별 총액 + 금액 기준 + 상품정보 입력 + 실행 ──
+            # ── Step 2: 환율(일괄) + 주문별 총액 + 금액 기준 + 상품정보 + 실행 ──
             elif poka_step == 2:
-                st.markdown("### 💰 금액별 포카 추가 — 주문별 금액 확인")
+                st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 설정")
 
                 selected = st.session_state.get('fs_poka_selected', [])
-                rates = st.session_state.get('fs_poka_rates', {})
 
+                # 환율 일괄 입력
+                rate = st.number_input(
+                    "환율 (USD → KRW, 선택한 재고 전체 적용)",
+                    min_value=1,
+                    value=st.session_state.get('fs_poka_rate', 1000),
+                    key="fs_poka_rate_input"
+                )
+                st.session_state['fs_poka_rate'] = rate
+
+                # 주문별 총 실결제금액 계산
                 _df2 = pd.DataFrame(df.to_dict('records'))
                 _df2['수량'] = pd.to_numeric(_df2['수량'], errors='coerce').fillna(0).astype(int)
                 _df2['상품금액'] = pd.to_numeric(_df2['상품금액'], errors='coerce').fillna(0).astype(float)
 
                 def calc_amount(row):
                     if row['결제통화'] == 'USD' and row['재고명'] in selected:
-                        return row['상품금액'] * row['수량'] * rates.get(row['재고명'], 1)
+                        return row['상품금액'] * row['수량'] * rate
                     elif row['결제통화'] == 'KRW':
                         return row['상품금액'] * row['수량']
                     return 0
@@ -278,7 +287,6 @@ def run_md_fs():
 
                 order_totals['포카 수량'] = order_totals['총 실결제금액'].apply(get_qty)
                 order_totals_show = order_totals[order_totals['포카 수량'] > 0]
-
                 if not order_totals_show.empty:
                     st.markdown("##### 📦 포카 지급 결과")
                     st.dataframe(order_totals_show, use_container_width=True, hide_index=True)
@@ -288,45 +296,65 @@ def run_md_fs():
                 # ── 포카 상품 정보 입력 ──
                 st.markdown("---")
                 st.markdown("##### 📝 추가할 포카 상품 정보 입력")
-                bonus_pname  = st.text_input("상품명",  value=st.session_state.get('fs_bonus_pname', ''),  key="fs_bonus_pname_input")
-                bonus_option = st.text_input("옵션명",  value=st.session_state.get('fs_bonus_option', ''), key="fs_bonus_option_input")
-                bonus_jname  = st.text_input("재고명",  value=st.session_state.get('fs_bonus_jname', ''),  key="fs_bonus_jname_input")
-                bonus_jcode  = st.text_input("재고코드", value=st.session_state.get('fs_bonus_jcode', ''),  key="fs_bonus_jcode_input")
-                st.session_state['fs_bonus_pname']  = bonus_pname
-                st.session_state['fs_bonus_option'] = bonus_option
-                st.session_state['fs_bonus_jname']  = bonus_jname
-                st.session_state['fs_bonus_jcode']  = bonus_jcode
+                bonus_pname  = st.text_input("상품명",  value=st.session_state.get(f'fs_bonus_pname_{round_no}', ''),  key=f"fs_bonus_pname_{round_no}")
+                bonus_option = st.text_input("옵션명",  value=st.session_state.get(f'fs_bonus_option_{round_no}', ''), key=f"fs_bonus_option_{round_no}")
+                bonus_jname  = st.text_input("재고명",  value=st.session_state.get(f'fs_bonus_jname_{round_no}', ''),  key=f"fs_bonus_jname_{round_no}")
+                bonus_jcode  = st.text_input("재고코드", value=st.session_state.get(f'fs_bonus_jcode_{round_no}', ''),  key=f"fs_bonus_jcode_{round_no}")
+                st.session_state[f'fs_bonus_pname_{round_no}']  = bonus_pname
+                st.session_state[f'fs_bonus_option_{round_no}'] = bonus_option
+                st.session_state[f'fs_bonus_jname_{round_no}']  = bonus_jname
+                st.session_state[f'fs_bonus_jcode_{round_no}']  = bonus_jcode
 
                 all_filled = bool(bonus_pname and bonus_option and bonus_jname and bonus_jcode)
 
-                col_prev, col_exec = st.columns([1, 2])
+                def _build_current_config():
+                    return {
+                        'selected': selected,
+                        'rate': rate,
+                        'base': base,
+                        'cap': cap,
+                        '상품명': bonus_pname,
+                        '옵션명': bonus_option,
+                        '재고명': bonus_jname,
+                        '재고코드': bonus_jcode,
+                    }
+
+                col_prev, col_more, col_exec = st.columns([1, 2, 2])
                 with col_prev:
                     if st.button("← 이전", key="fs_poka_prev"):
                         st.session_state['fs_poka_step'] = 1
                         st.rerun()
+                with col_more:
+                    if st.button("➕ 포카 1번 더 추가하기", disabled=not all_filled, key="fs_poka_more"):
+                        configs = st.session_state.get('fs_poka_configs', [])
+                        configs.append(_build_current_config())
+                        st.session_state['fs_poka_configs'] = configs
+                        # 다음 라운드 초기화
+                        st.session_state['fs_poka_step'] = 1
+                        st.session_state['fs_poka_selected'] = []
+                        st.session_state.pop('fs_poka_rate', None)
+                        st.session_state.pop('fs_poka_base', None)
+                        st.session_state.pop('fs_poka_limit_type', None)
+                        st.session_state.pop('fs_poka_cap', None)
+                        st.rerun()
                 with col_exec:
                     if st.button("✅ 실행", disabled=not all_filled, key="fs_poka_run"):
+                        configs = st.session_state.get('fs_poka_configs', [])
+                        configs.append(_build_current_config())
                         special_flags = st.session_state.get('fs_special_flags_fs', {})
                         special_set = {p for p, f in special_flags.items() if f}
-                        bonus_config = {
-                            'selected': selected,
-                            'rates': rates,
-                            'base': base,
-                            'cap': cap,
-                            '상품명': bonus_pname,
-                            '옵션명': bonus_option,
-                            '재고명': bonus_jname,
-                            '재고코드': bonus_jcode,
-                        }
                         buf_all, buf_dom, buf_int = _process_fs(
                             df, effective_tp, box_limit,
                             special_set=special_set,
-                            bonus_config=bonus_config
+                            bonus_configs=configs
                         )
                         st.session_state['fs_buf_all'] = buf_all.getvalue()
                         st.session_state['fs_buf_dom'] = buf_dom.getvalue()
                         st.session_state['fs_buf_int'] = buf_int.getvalue()
-                        st.success("FS 처리 완료 (포카 추가 포함)!")
+                        # 완료 후 poka 상태 초기화
+                        st.session_state['fs_poka_configs'] = []
+                        st.session_state['fs_poka_mode'] = False
+                        st.success(f"FS 처리 완료 (포카 {len(configs)}종 추가 포함)!")
 
     if 'fs_buf_all' in st.session_state:
         today = datetime.datetime.now().strftime("%y%m%d")
@@ -337,7 +365,7 @@ def run_md_fs():
 # ───────────────────────────────────────────────────
 # 3) 핵심 처리 함수
 # ───────────────────────────────────────────────────
-def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None, bonus_config: dict = None):
+def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None, bonus_configs: list = None):
     if special_set is None:
         special_set = set()
 
@@ -398,56 +426,55 @@ def _process_fs(df: pd.DataFrame, tp: dict, limit: int, special_set: set = None,
     res['상품명'] = res['재고명']
     res.loc[res['국가명'] == "Japan", '국가명'] = "."
 
-    # ── 금액별 포카 행 삽입 ──
-    if bonus_config:
-        _bc_selected = bonus_config['selected']
-        _bc_rates    = bonus_config['rates']
-        _bc_base     = bonus_config['base']
-        _bc_cap      = bonus_config.get('cap', None)
-
-        # 원본 df 기준 주문번호별 총 실결제금액 계산
+    # ── 금액별 포카 행 삽입 (복수 라운드) ──
+    if bonus_configs:
         _df_orig = pd.DataFrame(df.to_dict('records'))
         _df_orig['수량'] = pd.to_numeric(_df_orig['수량'], errors='coerce').fillna(0).astype(int)
         _df_orig['상품금액'] = pd.to_numeric(_df_orig['상품금액'], errors='coerce').fillna(0).astype(float)
 
-        def _bc_amount(row):
-            if row['결제통화'] == 'USD' and row['재고명'] in _bc_selected:
-                return row['상품금액'] * row['수량'] * _bc_rates.get(row['재고명'], 1)
-            elif row['결제통화'] == 'KRW':
-                return row['상품금액'] * row['수량']
-            return 0
+        for bonus_config in bonus_configs:
+            _bc_selected = bonus_config['selected']
+            _bc_rate     = bonus_config['rate']   # 단일 환율
+            _bc_base     = bonus_config['base']
+            _bc_cap      = bonus_config.get('cap', None)
 
-        _df_orig['_금액'] = _df_orig.apply(_bc_amount, axis=1)
-        _order_totals = _df_orig.groupby('주문번호')['_금액'].sum()
+            def _bc_amount(row, sel=_bc_selected, rate=_bc_rate):
+                if row['결제통화'] == 'USD' and row['재고명'] in sel:
+                    return row['상품금액'] * row['수량'] * rate
+                elif row['결제통화'] == 'KRW':
+                    return row['상품금액'] * row['수량']
+                return 0
 
-        bonus_rows = []
-        for orig_no, total in _order_totals.items():
-            qty = int(total // _bc_base)
-            if _bc_cap is not None:
-                qty = min(qty, _bc_cap)
-            if qty <= 0:
-                continue
-            # 해당 주문번호에서 선택된 재고명 행 1개 복사
-            mask = (
-                res['주문번호'].str.startswith(str(orig_no) + '-') &
-                res['재고명'].isin(_bc_selected)
-            )
-            if not mask.any():
-                continue
-            tmpl = res[mask].iloc[0].copy()
-            tmpl['상품명']  = bonus_config['상품명']
-            tmpl['옵션명']  = bonus_config['옵션명']
-            tmpl['재고명']  = bonus_config['재고명']
-            tmpl['재고코드'] = bonus_config['재고코드']
-            tmpl['수량']    = qty
-            tmpl['상품무게'] = 1
-            tmpl['상품금액'] = 1
-            tmpl['실결제금액'] = qty
-            tmpl['id']      = ''
-            bonus_rows.append(tmpl.to_dict())
+            _df_orig['_금액'] = _df_orig.apply(_bc_amount, axis=1)
+            _order_totals = _df_orig.groupby('주문번호')['_금액'].sum()
 
-        if bonus_rows:
-            res = pd.concat([res, pd.DataFrame(bonus_rows, columns=res.columns)], ignore_index=True)
+            bonus_rows = []
+            for orig_no, total in _order_totals.items():
+                qty = int(total // _bc_base)
+                if _bc_cap is not None:
+                    qty = min(qty, _bc_cap)
+                if qty <= 0:
+                    continue
+                mask = (
+                    res['주문번호'].str.startswith(str(orig_no) + '-') &
+                    res['재고명'].isin(_bc_selected)
+                )
+                if not mask.any():
+                    continue
+                tmpl = res[mask].iloc[0].copy()
+                tmpl['상품명']   = bonus_config['상품명']
+                tmpl['옵션명']   = bonus_config['옵션명']
+                tmpl['재고명']   = bonus_config['재고명']
+                tmpl['재고코드'] = bonus_config['재고코드']
+                tmpl['수량']     = qty
+                tmpl['상품무게'] = 1
+                tmpl['상품금액'] = 1
+                tmpl['실결제금액'] = qty
+                tmpl['id']       = ''
+                bonus_rows.append(tmpl.to_dict())
+
+            if bonus_rows:
+                res = pd.concat([res, pd.DataFrame(bonus_rows, columns=res.columns)], ignore_index=True)
 
     dom = res[res['국가코드'] == 'KR'].copy()
     intl = res[res['국가코드'] != 'KR'].copy()
