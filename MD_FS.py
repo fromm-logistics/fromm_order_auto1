@@ -230,25 +230,24 @@ def run_md_fs():
             elif poka_step == 2:
                 st.markdown(f"### 💰 금액별 포카 추가 — 라운드 {round_no} · 설정")
 
-                selected = st.session_state.get('fs_poka_selected', [])
+                selected = list(st.session_state.get('fs_poka_selected', []))
 
-                # 환율 일괄 입력
+                # 환율 일괄 입력 (라운드별 독립 키)
                 rate = st.number_input(
                     "환율 (USD → KRW, 선택한 재고 전체 적용)",
                     min_value=1,
-                    value=st.session_state.get('fs_poka_rate', 1000),
-                    key="fs_poka_rate_input"
+                    value=1000,
+                    key=f"fs_poka_rate_input_{round_no}"
                 )
-                st.session_state['fs_poka_rate'] = rate
 
                 # 주문별 총 실결제금액 계산
                 _df2 = pd.DataFrame(df.to_dict('records'))
                 _df2['수량'] = pd.to_numeric(_df2['수량'], errors='coerce').fillna(0).astype(int)
                 _df2['상품금액'] = pd.to_numeric(_df2['상품금액'], errors='coerce').fillna(0).astype(float)
 
-                def calc_amount(row):
-                    if row['결제통화'] == 'USD' and row['재고명'] in selected:
-                        return row['상품금액'] * row['수량'] * rate
+                def calc_amount(row, _sel=selected, _rate=rate):
+                    if row['결제통화'] == 'USD' and row['재고명'] in _sel:
+                        return row['상품금액'] * row['수량'] * _rate
                     elif row['결제통화'] == 'KRW':
                         return row['상품금액'] * row['수량']
                     return 0
@@ -262,22 +261,18 @@ def run_md_fs():
 
                 st.markdown("---")
                 base = st.number_input("금액 기준", min_value=1,
-                                       value=st.session_state.get('fs_poka_base', 50000),
-                                       key="fs_poka_base_input")
-                st.session_state['fs_poka_base'] = base
+                                       value=50000,
+                                       key=f"fs_poka_base_input_{round_no}")
 
                 limit_type = st.radio("제한 여부", ["무제한", "제한"],
                                       horizontal=True,
-                                      index=0 if st.session_state.get('fs_poka_limit_type', '무제한') == '무제한' else 1,
-                                      key="fs_poka_limit_radio")
-                st.session_state['fs_poka_limit_type'] = limit_type
+                                      key=f"fs_poka_limit_radio_{round_no}")
 
                 cap = None
                 if limit_type == "제한":
                     cap = st.number_input("최대 수량 (제한)", min_value=1,
-                                          value=st.session_state.get('fs_poka_cap', 7),
-                                          key="fs_poka_cap_input")
-                    st.session_state['fs_poka_cap'] = cap
+                                          value=7,
+                                          key=f"fs_poka_cap_input_{round_no}")
 
                 def get_qty(total):
                     q = int(total // base)
@@ -303,16 +298,26 @@ def run_md_fs():
 
                 all_filled = bool(bonus_pname and bonus_option and bonus_jname and bonus_jcode)
 
+                # 현재 라운드 값을 즉시 캡처 (클로저 아닌 값 고정)
+                _cur_selected = list(selected)
+                _cur_rate     = int(rate)
+                _cur_base     = int(base)
+                _cur_cap      = int(cap) if cap is not None else None
+                _cur_pname    = str(bonus_pname)
+                _cur_option   = str(bonus_option)
+                _cur_jname    = str(bonus_jname)
+                _cur_jcode    = str(bonus_jcode)
+
                 def _build_current_config():
                     return {
-                        'selected': selected,
-                        'rate': rate,
-                        'base': base,
-                        'cap': cap,
-                        '상품명': bonus_pname,
-                        '옵션명': bonus_option,
-                        '재고명': bonus_jname,
-                        '재고코드': bonus_jcode,
+                        'selected': _cur_selected,
+                        'rate':     _cur_rate,
+                        'base':     _cur_base,
+                        'cap':      _cur_cap,
+                        '상품명':   _cur_pname,
+                        '옵션명':   _cur_option,
+                        '재고명':   _cur_jname,
+                        '재고코드': _cur_jcode,
                     }
 
                 col_prev, col_more, col_exec = st.columns([1, 2, 2])
@@ -328,10 +333,6 @@ def run_md_fs():
                         # 다음 라운드 초기화
                         st.session_state['fs_poka_step'] = 1
                         st.session_state['fs_poka_selected'] = []
-                        st.session_state.pop('fs_poka_rate', None)
-                        st.session_state.pop('fs_poka_base', None)
-                        st.session_state.pop('fs_poka_limit_type', None)
-                        st.session_state.pop('fs_poka_cap', None)
                         st.rerun()
                 with col_exec:
                     if st.button("✅ 실행", disabled=not all_filled, key="fs_poka_run"):
