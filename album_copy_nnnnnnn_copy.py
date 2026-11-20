@@ -6,7 +6,7 @@ import random
 import traceback
 from openpyxl import load_workbook
 from openpyxl.styles import PatternFill
-from collections import defaultdict
+from collections import defaultdict, Counter
 from random import randint
 from collections import Counter
 
@@ -72,7 +72,7 @@ def run_album():
         exclude_stock = None
         file_b = None
         selected_options = []
-        
+
         if st.session_state.df_step1 is not None:
             stocks = sorted(st.session_state.df_step1['재고명'].dropna().unique())
             exclude_stock = st.selectbox("▶ 당첨자 제외할 재고명 선택", stocks)
@@ -99,25 +99,31 @@ def run_album():
             else:
                 df = st.session_state.df_step1.copy()
                 df_b_full = pd.read_excel(file_b, sheet_name="notice", dtype={'우편번호': str})
-                
+
                 # 선택된 옵션에 해당하는 당첨자만 필터링
                 df_b_filtered = df_b_full[df_b_full["option"].isin(selected_options)]
-                
+
                 # '배송진행여부'가 cancelled인 행 제거
                 df = df[df["배송진행여부"] != "cancelled"]
-                
-                # 필터링된 당첨자 명단의 merchant uid에 대해서만 수량 -1 실행
-                for uid in df_b_filtered["merchant uid"].dropna():
+
+                # uid별 총 차감 횟수 집계 후 여러 행에 분산 차감
+                uid_deductions = Counter(df_b_filtered["merchant uid"].dropna())
+                for uid, deduct_count in uid_deductions.items():
                     mask = (df["주문번호"] == uid) & (df["재고명"] == exclude_stock)
-                    if mask.any():
-                        idx = df[mask].index[0]
-                        df.at[idx, "수량"] -= 1
-                
+                    matching_indices = df[mask].index.tolist()
+                    remaining = deduct_count
+                    for idx in matching_indices:
+                        if remaining <= 0:
+                            break
+                        subtract = min(df.at[idx, "수량"], remaining)
+                        df.at[idx, "수량"] -= subtract
+                        remaining -= subtract
+
                 # 수량 0인 행 제거 및 정렬 (1순위: 주문번호, 2순위: id)
                 df = df[df["수량"] > 0]
                 df["id"] = df["id"].astype(str) # 형충돌 방지
                 df = df.sort_values(by=["주문번호", "id"]).reset_index(drop=True)
-                
+
                 st.session_state.df_step1 = df
                 st.success(f"✅ 선택된 옵션({', '.join(selected_options)}) 당첨자 제외 완료!")
                 st.dataframe(df.head())
@@ -128,7 +134,7 @@ def run_album():
                     df_a_sorted = st.session_state.get("df_step1_original", pd.DataFrame())
                     df_a_sorted["id"] = df_a_sorted["id"].astype(str)
                     df_a_sorted = df_a_sorted.sort_values(by=["주문번호", "id"])
-                    
+
                     df_a_sorted.to_excel(writer, sheet_name="원본", index=False)
                     df.to_excel(writer, sheet_name="당첨자빼기진행_주문서", index=False)
 
@@ -178,10 +184,10 @@ def run_album():
             for s_stock in split_stocks:
                 st.write(f"---")
                 st.subheader(f"📍 '{s_stock}' 설정")
-                
+
                 # 1. 해당 재고의 박스 제한 수량 설정
                 b_limit = st.number_input(f"'{s_stock}'의 박스당 최대 수량", min_value=1, value=20, key=f"limit_{s_stock}")
-                
+
                 # 2. 매핑 설정
                 n_map_key = f"n_map_{s_stock}"
                 if n_map_key not in st.session_state:
@@ -194,11 +200,11 @@ def run_album():
                     m_code = cols[1].text_input(f"분할될 재고코드 #{i+1}", key=f"map_code_{s_stock}_{i}")
                     if m_name and m_code:
                         current_mapping[m_name] = m_code
-                
+
                 if st.button(f"➕ '{s_stock}' 매핑 추가", key=f"btn_{s_stock}"):
                     st.session_state[n_map_key] += 5
                     st.rerun()
-                
+
                 all_configs[s_stock] = {
                     "mapping": current_mapping,
                     "box_limit": b_limit
@@ -228,13 +234,13 @@ def run_album():
             # 주문번호별로 그룹화하여 처리
             for order_id, group in df_target_full.groupby('주문번호'):
                 sorted_group = group.sort_values(by="id")
-                
+
                 # [중요] 사용자가 선택한 split_stocks 순서대로 유닛들을 한 줄로 세웁니다.
                 all_processed_units = []
                 for s_stock in split_stocks:
                     stock_group = sorted_group[sorted_group['재고명'] == s_stock]
                     if stock_group.empty: continue
-                    
+
                     config = all_configs[s_stock]
                     mapping = config["mapping"]
                     limit = config["box_limit"]
@@ -242,29 +248,29 @@ def run_album():
                     if not p_names:  # ← 추가
                         st.error(f"'{s_stock}'의 매핑이 비어있습니다.")
                         st.stop()
-                    
+
                     # 유닛 전개 및 순환 이름 배정
                     temp_units = []
                     for _, row in stock_group.iterrows():
                         for _ in range(int(row['수량'])):
                             temp_units.append(row.copy())
-                    
+
                     for idx, unit in enumerate(temp_units):
                         assigned_name = p_names[idx % len(p_names)]
                         unit['재고명'] = assigned_name
                         unit['재고코드'] = mapping[assigned_name]
                         # 나중에 계산을 위해 이 재고가 차지하는 '비중'을 기록합니다.
-                        unit['_weight'] = 1.0 / limit 
+                        unit['_weight'] = 1.0 / limit
                         all_processed_units.append(unit)
 
                 # 2. '잔여 공간' 기반 박스 배분 로직
                 order_boxes = []
                 current_box = []
                 current_weight_sum = 0.0
-                
+
                 for unit in all_processed_units:
                     unit_weight = unit['_weight']
-                    
+
                     # 만약 현재 유닛을 넣었을 때 1.0(박스 가득참)을 초과한다면
                     if current_weight_sum + unit_weight > 1.0000000001:
                         order_boxes.append(current_box)
@@ -273,7 +279,7 @@ def run_album():
                     else:
                         current_box.append(unit)
                         current_weight_sum += unit_weight
-                
+
                 if current_box:
                     order_boxes.append(current_box)
 
@@ -281,14 +287,14 @@ def run_album():
                 for box_num, box_content in enumerate(order_boxes, start=1):
                     temp_counts = defaultdict(int)
                     id_to_sample_row = {}
-                    
+
                     for unit_row in box_content:
                         id_val = str(unit_row.get('id', ''))
                         p_name = unit_row['재고명']
                         key = (id_val, p_name)
                         temp_counts[key] += 1
                         id_to_sample_row[(id_val, p_name)] = unit_row
-                    
+
                     for (id_val, p_name), qty in temp_counts.items():
                         new_row = id_to_sample_row[(id_val, p_name)].copy()
                         new_row['주문번호'] = f"{order_id}-{box_num}"
@@ -319,7 +325,7 @@ def run_album():
             df_full.loc[mask, '결제통화'] = 'USD'
             df_full.loc[mask & (df_full['상품금액'] > 1), '상품금액'] /= 1000
             df_full['실결제금액'] = df_full['수량'] * df_full['상품금액']
-            
+
             if '실결제금액' in df_full.columns:
                 col_idx = df_full.columns.get_loc('상품금액') + 1
                 cols = df_full.columns.tolist()
@@ -375,7 +381,7 @@ def run_album():
 
             wb = load_workbook(buf)
             yellow = PatternFill("solid", fgColor="FFFF00")
-            
+
             # 하이라이트 적용
             ws_dom = wb["국내"]
             zc = df_dom.columns.get_loc("우편번호") + 1
@@ -405,7 +411,7 @@ def run_album():
             col_d, col_i = st.columns(2)
             col_d.metric("국내 주문번호 수 (중복제외)", df_dom['주문번호'].nunique())
             col_i.metric("해외 주문번호 수 (중복제외)", df_int['주문번호'].nunique())
-            
+
 
     # ——————————————————————————————————————————————
     # STEP 3: 당첨자 추가
@@ -485,7 +491,7 @@ def run_album():
                     add_intl.to_excel(w, sheet_name="해외_추가", index=False)
                     dom_all.to_excel(w, sheet_name="국내", index=False)
                     intl_all.to_excel(w, sheet_name="해외", index=False)
-                
+
                 buf_all.seek(0)
                 st.session_state["step3_buf_all"] = buf_all.getvalue()
                 st.success("✅ 당첨자 추가 및 주문번호/id 기준 정렬 완료!")
